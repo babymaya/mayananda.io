@@ -1,4 +1,5 @@
 const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
 
 cloudinary.config({
     cloud_name: 'dpzz06lzn',
@@ -18,7 +19,8 @@ async function listFiles() {
             ...videos.resources.map(f => ({ src: f.secure_url, type: 'video' }))
         ];
 
-        console.log('const media = ' + JSON.stringify(media, null, 4) + ';');
+        fs.writeFileSync('mediaList.json', JSON.stringify(media, null, 4));
+        console.log('mediaList.json written successfully');
     } catch (err) {
         console.error('Error:', err);
     }

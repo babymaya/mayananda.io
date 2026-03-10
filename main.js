@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import media from './mediaList.json' assert { type: 'json' };
 
 import mediaRaw from './mediaList.json' assert { type: 'json' };
 const media = mediaRaw.sort(() => Math.random() - 0.5);
