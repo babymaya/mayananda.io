@@ -1,3 +1,6 @@
 export default {
-    base: '/mayananda.io/'
+    base: '/mayananda.io/',
+    build: {
+        assetsDir: 'assets'
+    }
 }
