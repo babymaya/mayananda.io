@@ -112,7 +112,7 @@ for (let j = 0; j < rows; j++) {
         }
 
         const material = item.type === 'video'
-            ? new THREE.MeshStandardMaterial({ map: texture })
+            ? new THREE.MeshBasicMaterial({ map: texture })
             : new THREE.MeshStandardMaterial({ map: texture });
 
         const baseNode = new THREE.Object3D();
@@ -140,6 +140,13 @@ function frameCard(clickedPos) {
 }
 
 function animate() {
+    // Update video textures every frame
+    baseNodes.forEach(node => {
+        const card = node.children[0];
+        if (card && card.material.map instanceof THREE.VideoTexture) {
+            card.material.map.needsUpdate = true;
+        }
+    });
     // Get the visible width at z = -4 (where cards sit)
     const fov = camera.fov * (Math.PI / 180);
     const distance = Math.abs(camera.position.z - (-4));
