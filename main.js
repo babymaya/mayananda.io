@@ -177,7 +177,7 @@ function animate() {
             node.rotation.x = THREE.MathUtils.lerp(node.rotation.x, -normalizedY * maxRotation, 0.1);
             node.position.x = THREE.MathUtils.lerp(node.position.x, node.originalX - (node.originalX * Math.abs(normalizedX) * 0.3), 0.1);
             node.position.y = THREE.MathUtils.lerp(node.position.y, node.originalY, 0.1);
-            card.position.z = THREE.MathUtils.lerp(card.position.z, -4.0, 0.1);
+            card.position.z = THREE.MathUtils.lerp(card.position.z - (maxRotation*0.05), -4.0, 0.1);
         }
     });
     //move camera according to scroll
