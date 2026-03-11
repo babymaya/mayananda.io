@@ -90,7 +90,9 @@ for (let j = 0; j < rows; j++) {
             videoEl.muted = true;
             videoEl.playsInline = true;
             videoEl.autoplay = true;
-            videoEl.play();
+            videoEl.crossOrigin = 'anonymous'; // ✅ needed for Cloudinary URLs
+            videoEl.load(); // ✅ force load before play
+            videoEl.play().catch(e => console.log('autoplay blocked:', e));
             texture = new THREE.VideoTexture(videoEl);
             texture.colorSpace = THREE.SRGBColorSpace;
             await new Promise(resolve => videoEl.addEventListener('loadedmetadata', resolve, { once: true }));
