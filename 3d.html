@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Work — Mayananda</title>
+    <meta name="description" content="Procedural systems, the tooling around them, and the things that came out." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="stylesheet" crossorigin href="/assets/style-Djq7CqGq.css">
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html" aria-current="page">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>3D Work</h1>
+        <p class="lede">Houdini, and the tooling that makes it reproducible.</p>
+
+
+        <h2>houdini integration</h2>
+        <p>Scripting Houdini from outside is a blind loop: write code, run it, read a
+        traceback, guess what the scene looks like, try again. These tools close that
+        loop by putting the caller inside the running session, so a node can be built
+        and its cook errors read back in the same breath.</p>
+
+        <div class="shots" data-set="3d/houdini" aria-label="Images"></div>
+        <p class="shots-hint">Session stills to come.</p>
+
+        <h3>tools built</h3>
+        <ul>
+            <li><strong>Live session bridge</strong> - a dependency-free server speaking a
+            tool protocol on one side and a listener inside Houdini on the other. Every
+            call is marshalled onto the main thread, because the API will not tolerate
+            being touched from a socket thread. Behaves identically interactive or headless.</li>
+            <li><strong>API introspection helper</strong> - asks a real Houdini what a call
+            is actually named before any code is written against it. The object model is
+            one of the most confidently mis-remembered APIs there is.</li>
+            <li><strong>Shading-language correctness sheet</strong> - real signatures and the
+            recurring invented ones, meant to be read before writing a wrangle rather than
+            after debugging one.</li>
+            <li><strong>Scene cataloguer</strong> - one bounded process per file producing a
+            framed thumbnail and a structured summary.</li>
+            <li><strong>Mesh splitter</strong> - turns a single merged export into individually
+            addressable named parts using its vertex colours, so a model authored as one
+            object can be animated piece by piece on the web.</li>
+        </ul>
+
+        <h3>future scope</h3>
+        <ul>
+            <li>Parameter wedging across a printable asset, with a validator that fails on
+            wall thickness and self-intersection rather than a human eyeballing variants.</li>
+            <li>Turntables instead of stills: the cataloguer already sweeps a frame range,
+            so a looping capture per scene is a small step from where it is.</li>
+            <li>Automatic terminal-node detection, so a scene whose display flag was left
+            mid-chain still captures the result the author intended.</li>
+            <li>Publishing assets straight from the session to a versioned depot.</li>
+        </ul>
+
+        <h2>cataloguing</h2>
+        <p>This is a collection of Houdini setup projects from over the years.</p>
+
+        <div class="grid" id="catGrid" aria-label="Scene catalogue"></div>
+        <p class="shots-hint" id="catNote">Loading catalogue&hellip;</p>
+
+        <h2>version control</h2>
+        <p>Art and code get different systems. Source lives in a distributed VCS where
+        branching and merging are the point; binary art lives in a centralised depot,
+        because the things that make that unfashionable for code are exactly what large
+        binaries need. The work is in the type map: formats that cannot be merged are
+        marked for exclusive checkout so two people cannot both edit one and silently
+        lose a day, formats that are already compressed are stored uncompressed rather
+        than paying to compress them twice, and plain text stays diffable. An ignore
+        list keeps autosaves and caches out entirely, and metadata is checkpointed on
+        its own schedule because it fails differently from the file archives.</p>
+
+        <div class="shots" data-set="3d/pen" aria-label="Images"></div>
+        <p class="shots-hint">Asset stills to come.</p>
+
+        <a class="back" href="/">&larr; back</a>
+    </main>
+
+    <div id="lightbox" role="dialog" aria-modal="true" aria-label="Scene detail">
+        <button class="close" type="button" aria-label="Close">&times;</button>
+        <figure>
+            <img id="lbImg" alt="">
+            <figcaption id="lbCap"></figcaption>
+        </figure>
+    </div>
+
+    <script>
+        // Catalogue grid. Entries come from a generated, sanitised JSON file:
+        // thumbnails and facts only, no source paths.
+        (function () {
+            var grid = document.getElementById('catGrid');
+            var note = document.getElementById('catNote');
+            var box = document.getElementById('lightbox');
+            var img = document.getElementById('lbImg');
+            var cap = document.getElementById('lbCap');
+
+            function open(entry) {
+                img.src = '/catalog/' + entry.id + '/thumb.png';
+                img.alt = 'Rendered thumbnail of the scene ' + entry.name;
+                var bits = [];
+                if (entry.year) bits.push(entry.year);
+                if (entry.nodes) bits.push(entry.nodes + ' nodes');
+                if (entry.vex) bits.push(entry.vex + ' VEX wrangles');
+                if (entry.prims) bits.push(entry.prims.toLocaleString() + ' primitives');
+                if (entry.sim) bits.push('simulation');
+                var txt = '<strong>' + entry.name + '</strong><br>' + bits.join(' &middot; ');
+                if (entry.summary) txt += '<br>' + entry.summary;
+                // Never let a tool-lit capture be mistaken for lighting work.
+                if (entry.toolLit) {
+                    txt += '<br><em>Lit by the cataloguer &mdash; the scene had no lights of its' +
+                           ' own. A catalogue image, not a lookdev render.</em>';
+                }
+                cap.innerHTML = txt;
+                box.setAttribute('open', '');
+            }
+            function close() { box.removeAttribute('open'); img.src = ''; }
+
+            box.addEventListener('click', function (e) {
+                if (e.target === box || e.target.classList.contains('close')) close();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && box.hasAttribute('open')) close();
+            });
+
+            fetch('/catalog/catalog.json')
+                .then(function (r) { return r.json(); })
+                .then(function (list) {
+                    list.forEach(function (entry) {
+                        var b = document.createElement('button');
+                        b.type = 'button';
+                        b.setAttribute('aria-label', 'View ' + entry.name);
+                        var i = document.createElement('img');
+                        i.src = '/catalog/' + entry.id + '/thumb.png';
+                        i.alt = entry.name;
+                        i.loading = 'lazy';
+                        i.decoding = 'async';
+                        b.appendChild(i);
+                        b.addEventListener('click', function () { open(entry); });
+                        grid.appendChild(b);
+                    });
+                    note.textContent = list.length + ' scenes, 2017\u20132023. ' +
+                        'Tap a thumbnail for detail.';
+                })
+                .catch(function () {
+                    note.textContent = 'Catalogue could not be loaded.';
+                });
+        })();
+    </script>
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+    <script src="/gallery.js"></script>
+</body>
+</html>

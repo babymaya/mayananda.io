@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Pipeline — Mayananda</title>
+    <meta name="description" content="Tooling for Houdini, and for getting work out of it reproducibly." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="stylesheet" crossorigin href="/assets/style-Djq7CqGq.css">
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/pipeline.html" aria-current="page">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Pipeline</h1>
+        <p class="lede">Notes on how work gets routed, budgeted and rendered. The shape of the
+        systems rather than the code.</p>
+
+
+        <h2>token optimisation router</h2>
+        <div class="shots" data-set="pipeline/router" aria-label="Images"></div>
+        <p class="shots-hint">Diagrams and stills, once uploaded.</p>
+
+        <p>Not every step in a long job needs the most capable model; most of it is bookkeeping
+        that a cheaper tier answers just as well. So each kind of task is pinned to a tier up
+        front and routed by declared task type, with every call's token usage recorded, which
+        makes spend a number you can look at rather than a surprise. There is no classifier
+        picking a tier at runtime, and nothing here learns or adapts from past runs; automatic
+        classification is a next step, not a shipped feature. The accounting is the part worth
+        keeping, since attributing usage per task type is what shows where a cheaper tier would
+        actually pay off.</p>
+
+<pre>
+ task
+   |
+   v
+ +---------------------+
+ | role pinned by      |   declared task type,
+ | declared task type  |   no runtime classifier
+ +---------------------+
+    |               |
+    v               v
+ +---------+    +----------+
+ | cheaper |    | stronger |
+ | model   |    | model    |
+ +---------+    +----------+
+    |               |
+    +-------+-------+
+            v
+         result
+            |
+            +--> token accounting, per task type
+</pre>
+
+        <h2>compression, as a budget problem</h2>
+        <div class="shots" data-set="pipeline/compression" aria-label="Images"></div>
+        <p class="shots-hint">Illustrations to come.</p>
+
+        <p>Context is a budget, not a container: a long job that re-sends its whole history at
+        every step spends most of that budget restating what it already established, and
+        eventually stops fitting at all. The approaches being explored are the ordinary ones,
+        summarise finished stages down to their conclusions, chunk large inputs so only the
+        relevant part travels, and cache intermediate results so a repeated step is a lookup
+        rather than a re-derivation. The trade is always the same: what you compress away you
+        cannot ask about later, so the real work is deciding what is safe to lose. This is
+        exploratory, a way of thinking about long jobs rather than a finished system with
+        results to quote.</p>
+
+<pre>
+ long input
+     |
+     v
+ +-------+    +-----------+    +-------+    +--------------+
+ | chunk | -> | summarise | -> | cache | -> | reuse on the |
+ +-------+    +-----------+    +-------+    | later passes |
+                                            +--------------+
+</pre>
+
+        <h2>render backend</h2>
+        <div class="shots" data-set="pipeline/render" aria-label="Images"></div>
+        <p class="shots-hint">Batch output to come.</p>
+
+        <p>Work is described declaratively, what to open, what to look at, what to write out,
+        and each job is handed to its own headless process with a bounded timeout. That is the
+        whole design argument: an old scene can hang on a missing asset, cook forever, or take
+        the interpreter down with it, and in one shared process any of those ends the batch,
+        while isolated and time-boxed the same failure is a single row marked failed with
+        everything after it still running. Each job returns structured output plus an image, the
+        numbers you can sort against and the frame you have to look at to know it worked.</p>
+
+<pre>
+ job list
+    |
+    v
+ +----------+     +-----------------------+
+ | dispatch | --> | one bounded process,  |
+ +----------+     | time-boxed, per job   |
+      ^           +-----------------------+
+      |              |                |
+      |             ok             failed
+      |              |                |
+      |              v                v
+      +---------- collected rows + image per job
+</pre>
+
+        <a class="back" href="/">&larr; back</a>
+    </main>
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+    <script src="/gallery.js"></script>
+</body>
+</html>
