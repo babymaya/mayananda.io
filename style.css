@@ -1,53 +1,40 @@
-header {
+/* mayananda.com — armillary rings hero.
+   The 30000px scroll, the sticky mix-blend video and the #video2 overlay are gone:
+   the footage now lives on the mesh instead of floating over it. */
+
+html, body {
+    margin: 0;
+    padding: 0;
     background-color: black;
+    overflow-x: hidden;
 }
+
+img, video {
+    max-width: 100%;
+}
+
 .container {
-    background-color: black;
-}
-#logo{
-    height: 150px;
-    display: block;
-    margin-right: auto;
-    margin-left: auto;
-    position: relative;
-    z-index: 2; /* ✅ above the canvas */
-    border: none;
-}
-section.vid {
-    height: 30000px;
     background-color: transparent;
 }
 
-    section.vid div.holder {
-        position: sticky;
-        top: -300px;
-        mix-blend-mode: screen;
-        z-index: 1;
-        pointer-events: none; /* so clicks pass through to canvas */
-    }
-
-section.vid video {
-    width:100%;
-    height:100%;
-    object-fit: cover;
-    object-position: center;
+#logo {
+    /* Fixed 150px is a third of the width of a small phone. */
+    height: clamp(72px, 16vw, 150px);
+    width: auto;
+    display: block;
+    margin: 0 auto;
+    padding-top: 1.25rem;
+    position: relative;
+    z-index: 2;              /* above the canvas */
+    border: none;
 }
-section.vid div.holder2 {
-       
-        z-index: 1;
-        pointer-events: none;
-    }
-#video2 {
-    position: absolute;
-    top: 6000px;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 75%;
-    height: 75%;
-    object-fit: cover;
-    mix-blend-mode: screen;
-    z-index: 2;
-    pointer-events: none;
+
+/* Scroll runway for the three acts: rings unwind, rig recedes, image array rises.
+   In vh so the sequence is the same length in screenfuls on desktop and phone. */
+section.scrub {
+    height: 600vh;
+    background-color: transparent;
+    pointer-events: none;    /* clicks pass through to the canvas */
 }
 
 canvas {
@@ -57,38 +44,412 @@ canvas {
     z-index: 0;
 }
 
-footer {
-    position: relative;
-    z-index: 2;
-    background-color: black;
-    color: dimgray;
-    text-align: center;
-    padding: 20px;
+/* ---- top-right nav ------------------------------------------------------ */
+
+#nav {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 5;
+    padding: 14px 16px;
+    text-align: right;
     font-family: 'Courier New', Courier, monospace;
 }
 
-footer a {
-        color: darkred;
-        text-decoration: none;
+#navToggle {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    /* 44px is the accepted minimum tap target; the padding on #nav makes up
+       the difference around this 40px box. */
+    -webkit-tap-highlight-color: transparent;
 }
 
-a {
-        color: inherit; /* ✅ inherit color from parent instead of browser default blue */
+#navToggle .bars {
+    display: block;
+    position: absolute;
+    inset: 0;
+    opacity: 1;
+    transition: opacity 180ms ease;
 }
 
-* {
-    scrollbar-color: red black; /* thumb track */
+#navToggle .bars i {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background: #ffffff;
+    transition: transform 220ms ease;
+}
+#navToggle .bars i:nth-child(1) { top: 13px; }
+#navToggle .bars i:nth-child(2) { top: 19px; }
+#navToggle .bars i:nth-child(3) { top: 25px; }
+
+#navToggle .caret {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 26px;
+    line-height: 1;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+
+#nav.open #navToggle .bars { opacity: 0; }
+#nav.open #navToggle .caret { opacity: 1; transform: translateY(0); }
+
+#navMenu {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0 10px;
+    border-radius: 3px;
+    /* Panel only while open: the nav is fixed over the page, and without a
+       backdrop the item text lands on top of the body copy and both become
+       unreadable. Transparent when closed so it never shows over the canvas. */
+    background: transparent;
+    transition: background 200ms ease;
+}
+
+#nav.open #navMenu {
+    background: rgba(0, 0, 0, 0.72);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    padding: 6px 10px 8px;
+}
+
+#navMenu li {
+    overflow: hidden;
+}
+
+#navMenu a {
+    display: block;
+    padding: 7px 2px;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: lowercase;
+    /* Slide out from the right, staggered per item. */
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 300ms cubic-bezier(.2, .7, .3, 1), opacity 240ms ease;
+}
+
+#nav.open #navMenu a { transform: translateX(0); opacity: 1; }
+#nav.open #navMenu li:nth-child(1) a { transition-delay: 40ms; }
+#nav.open #navMenu li:nth-child(2) a { transition-delay: 85ms; }
+#nav.open #navMenu li:nth-child(3) a { transition-delay: 130ms; }
+#nav.open #navMenu li:nth-child(4) a { transition-delay: 175ms; }
+#nav.open #navMenu li:nth-child(5) a { transition-delay: 220ms; }
+
+/* Marks the page you are already on, so the menu says where you are. */
+#navMenu a[aria-current="page"] {
+    color: #ffc94d;
+}
+
+#navMenu a:hover,
+#navMenu a:focus-visible { color: darkred; }
+
+/* Closed, the links must not be reachable by keyboard or pointer. */
+#nav:not(.open) #navMenu { pointer-events: none; }
+#nav:not(.open) #navMenu a { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+    #navMenu a,
+    #navToggle .bars,
+    #navToggle .caret { transition: none; }
+}
+
+/* ---- content pages ------------------------------------------------------
+   Sketches. Same black/monospace language as the landing page, no canvas. */
+
+body.page {
+    color: #d8d8d8;
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1.7;
+}
+
+.page main {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: clamp(4.5rem, 12vw, 7rem) clamp(1.25rem, 5vw, 2rem) 3rem;
+}
+
+.page h1 {
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    line-height: 1.15;
+    margin: 0 0 0.4rem;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.page .lede {
+    color: #9a9a9a;
+    margin: 0 0 3rem;
+}
+
+.page h2 {
+    font-size: 1.05rem;
+    text-transform: lowercase;
+    letter-spacing: 0.08em;
+    color: #c10f0f;
+    margin: 2.5rem 0 0.6rem;
+}
+
+.page p { margin: 0 0 1rem; }
+
+.page ul { margin: 0 0 1rem; padding-left: 1.1rem; }
+.page li { margin: 0 0 0.35rem; }
+
+.page a { color: #ffc94d; }
+
+/* Marks unfinished content so a draft is never mistaken for a finished page. */
+.page .todo {
+    display: block;
+    border-left: 2px solid #444;
+    padding: 0.5rem 0 0.5rem 0.9rem;
+    margin: 0 0 1.25rem;
+    color: #7a7a7a;
+    font-size: 0.9rem;
+}
+
+/* Placeholder media. Swap the <img src> for the real asset and delete the
+   .ph class — the figure, caption and sizing all stay as they are. */
+.page figure {
+    margin: 1.25rem 0 1.75rem;
+}
+
+.page figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 2px;
+    background: #101010;
+}
+
+.page figure img.ph {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border: 1px dashed #333;
+    border-radius: 2px;
+}
+
+.page figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
+    color: #6f6f6f;
+}
+
+/* ---- vertical screenshot carousel --------------------------------------
+   Native scroll-snap: no JS, identical on touch and desktop, and it never
+   fights the page scroll because it only scrolls on its own axis. */
+/* Horizontal scroll-snap. Swipe sideways through the shots; the page keeps
+   scrolling vertically, so the two never fight. */
+.shots {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #1e1e1e;
+    border-radius: 3px;
+    background: #0a0a0a;
+    margin: 1.25rem 0 0.6rem;
     scrollbar-width: thin;
 }
 
-::-webkit-scrollbar {
-    width: 8px;
+.page .shots figure {
+    margin: 0;
+    flex: 0 0 auto;              /* do not let flex squeeze the frames */
+    scroll-snap-align: center;
+    padding: 0.9rem;
 }
 
-::-webkit-scrollbar-track {
-    background: black;
+/* These are phone screenshots -- tall and narrow. `.page figure img` sets
+   width:100%, which is more specific than a bare `.shots img` and was stretching
+   them to the container width. Size by HEIGHT and let width follow, so the
+   aspect ratio is whatever the file actually is and nothing is cropped or
+   squeezed into a square. */
+.page .shots figure img,
+.page .shots figure video {
+    display: block;
+    width: auto;
+    height: auto;
+    max-height: 62vh;
+    max-width: min(88vw, 30rem);
+    object-fit: contain;
+    margin: 0 auto;
+    border-radius: 2px;
 }
 
-::-webkit-scrollbar-thumb {
-    background: red;
+.shots figcaption {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #6f6f6f;
+}
+
+.shots-hint {
+    font-size: 0.78rem;
+    color: #5f5f5f;
+    margin: 0 0 2rem;
+}
+
+/* ---- catalogue grid ----------------------------------------------------- */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    margin: 1.25rem 0 1rem;
+}
+
+.grid button {
+    display: block;
+    padding: 0;
+    border: 1px solid #1e1e1e;
+    border-radius: 2px;
+    /* The thumbnails are transparent PNGs and many of these scenes are dark
+       geometry — on a near-black tile they vanish. A mid grey lets both dark
+       and light subjects read. */
+    background: linear-gradient(160deg, #3a3a3a, #232323);
+    cursor: pointer;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+}
+
+.grid button:hover,
+.grid button:focus-visible { border-color: #c10f0f; outline: none; }
+
+.grid img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* ---- lightbox ----------------------------------------------------------- */
+#lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 4vmin;
+    background: rgba(0, 0, 0, 0.88);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+#lightbox[open] { display: flex; }
+
+#lightbox figure { margin: 0; max-width: 62rem; text-align: center; }
+/* Same reason as the grid tiles: transparent PNGs need something behind them. */
+#lightbox img {
+    max-width: 100%;
+    max-height: 68vh;
+    background: linear-gradient(160deg, #3a3a3a, #232323);
+    border-radius: 2px;
+}
+#lightbox figcaption {
+    margin-top: 0.9rem;
+    color: #b9b9b9;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    text-align: left;
+}
+#lightbox .close {
+    position: absolute;
+    top: 12px; right: 16px;
+    background: none; border: 0; cursor: pointer;
+    color: #fff; font-size: 26px; line-height: 1;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.page .back {
+    display: inline-block;
+    margin-top: 3rem;
+    color: #9a9a9a;
+    text-decoration: none;
+}
+.page .back:hover { color: #ffffff; }
+
+footer {
+    position: relative;
+    z-index: 2;
+    background-color: transparent;
+    color: dimgray;
+    text-align: center;
+    /* Extra top padding gives the gradient room to fade in above the text. */
+    padding: 90px 20px 24px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+/* Backdrop panel: solid black at the bottom edge, fully transparent at the top.
+   The blur is masked with the same ramp, so the frosting fades in rather than
+   starting abruptly at the panel's top edge. */
+footer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(0, 0, 0, 0.35) 38%,
+        rgba(0, 0, 0, 0.75) 68%,
+        rgb(0, 0, 0) 100%
+    );
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 55%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 55%);
+}
+
+/* Safari on iOS historically drops masked backdrop-filter; without the mask the
+   blur is still correct, just uniform. The gradient carries the effect either way. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    footer::before { background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgb(0,0,0) 70%); }
+}
+
+footer a {
+    color: darkred;
+    text-decoration: none;
+}
+
+a {
+    color: inherit;
+}
+
+@media (max-width: 768px) {
+    footer {
+        padding: 16px 12px;
+        font-size: 0.9rem;
+        line-height: 1.7;
+    }
+}
+
+/* If the model fails to load the canvas is empty and the page reads as broken;
+   at least keep the logo and contact details legible. */
+body.scene-failed section.scrub { height: 0; }
+
+* {
+    scrollbar-color: red black;
+    scrollbar-width: thin;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: black; }
+::-webkit-scrollbar-thumb { background: red; }
+
+/* Sub-headings inside a section (tools built, future scope). */
+.page h3 {
+    font-size: 0.95rem;
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    color: #ffc94d;
+    margin: 1.6rem 0 0.4rem;
 }

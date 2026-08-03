@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>About — Mayananda</title>
+    <meta name="description" content="Technical direction, procedural content, and the tooling in between." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html" aria-current="page">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>About</h1>
+        <p class="lede">Technical direction, procedural content, and the tooling in between.</p>
+
+        <div class="shots" data-set="about/portrait" aria-label="Images"></div>
+        <p class="shots-hint"></p>
+
+        <h2>proficiency</h2>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr><th scope="col">Tool</th><th scope="col">Level</th></tr>
+                </thead>
+                <tbody>
+                <tr><td>Houdini</td><td class="level">Advanced</td></tr>
+                <tr><td>VEX</td><td class="level">Intermediate-Advanced</td></tr>
+                <tr><td>Python</td><td class="level">Advanced</td></tr>
+                <tr><td>PowerShell</td><td class="level">Advanced</td></tr>
+                <tr><td>Go</td><td class="level">Intermediate</td></tr>
+                <tr><td>C</td><td class="level">Intermediate</td></tr>
+                <tr><td>TouchDesigner</td><td class="level">Intermediate</td></tr>
+                <tr><td>Three.js / WebGL</td><td class="level">Intermediate</td></tr>
+                <tr><td>Perforce</td><td class="level">Familiar</td></tr>
+                <tr><td>Unreal</td><td class="level">Familiar</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>tools built</h2>
+
+        <ul>
+            <li>A bridge that drives a live Houdini session over a local socket so scenes can be built and inspected programmatically</li>
+            <li>An API introspection helper that asks a real Houdini what a call is actually named before code is written against it</li>
+            <li>A scene cataloguer: one bounded process per file producing a thumbnail and a structured summary</li>
+            <li>A model splitter that turns a single merged mesh into individually addressable named parts using its vertex colours</li>
+            <li>A media pipeline where dropping files in a folder publishes them to this site with no code change</li>
+            <li>Two Android games in C11/raylib with headless, unit-testable game logic</li>
+        </ul>
+
+        <h2>contact</h2>
+
+        <p><a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+
+        <a class="back" href="/">&larr; back</a>
+    </main>
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>github: <a href="https://github.com/babymaya" target="_blank" rel="noopener" aria-label="GitHub: babymaya">babymaya</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+    <script src="/gallery.js"></script>
+</body>
+</html>
