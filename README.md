@@ -92,3 +92,34 @@ No animation clips are baked into the `.glb`. All motion is written in `main.js`
   at phone sizes; the canvas is sized to `window.innerWidth`/`innerHeight` and the
   model is framed to the *smaller* viewport dimension so a portrait screen shows the
   whole ring instead of cropping it.
+
+## Publishing
+
+One command, from `op2/projects/2026job`:
+
+```powershell
+..\..\scripts\publish-site.ps1
+```
+
+Syncs media from the staging tree, downscales and converts images to WebP,
+regenerates the media manifest, builds, and starts a local preview. Then commit
+and push `main` here to deploy.
+
+## Custom domain
+
+`public/CNAME` must ship with every build. The deploy action force-replaces the
+`gh-pages` branch, so a build without that file deletes the CNAME, GitHub clears
+the custom domain, and the site 404s **while the workflow still reports success**.
+The workflow also passes `cname:` as a second line of defence. Verify a deploy with:
+
+```bash
+gh api repos/babymaya/mayananda.io/pages --jq '.cname + " | " + .status'
+curl -s -o /dev/null -w "%{http_code}" https://mayananda.com/
+```
+
+## Images
+
+Source images are masters and are never modified. `scripts/optimize-media.py`
+downscales and re-encodes only the copies under `public/`, so re-syncing restores
+originals and the next publish reduces them again. WebP is used because the
+catalogue thumbnails carry alpha.
