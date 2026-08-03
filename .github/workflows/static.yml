@@ -26,3 +26,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
+          # This action force-replaces the gh-pages branch. Without cname
+          # (and public/CNAME) the custom domain is wiped on every deploy
+          # and the site 404s.
+          cname: mayananda.com
