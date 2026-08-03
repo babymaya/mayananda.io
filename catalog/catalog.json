@@ -8,7 +8,8 @@
   "prims": 2889216,
   "sim": true,
   "toolLit": true,
-  "summary": "167 nodes across 7 contexts; simulation setup, 4 VEX wrangles, 26 HDA types, 2,889,216 prims -- key types: parameter, multiply, constant"
+  "summary": "167 nodes across 7 contexts; simulation setup, 4 VEX wrangles, 26 HDA types, 2,889,216 prims -- key types: parameter, multiply, constant",
+  "thumb": "thumb.webp"
  },
  {
   "id": "chladniPatternA",
@@ -19,7 +20,8 @@
   "prims": 279602,
   "sim": true,
   "toolLit": true,
-  "summary": "51 nodes across 3 contexts; simulation setup, 5 VEX wrangles, 4 HDA types, 279,602 prims -- key types: object_merge, volumewrangle, attribcreate::2.0"
+  "summary": "51 nodes across 3 contexts; simulation setup, 5 VEX wrangles, 4 HDA types, 279,602 prims -- key types: object_merge, volumewrangle, attribcreate::2.0",
+  "thumb": "thumb.webp"
  },
  {
   "id": "flowFieldA",
@@ -30,7 +32,8 @@
   "prims": 196640,
   "sim": false,
   "toolLit": true,
-  "summary": "69 nodes across 3 contexts; 1 VEX wrangles, 11 HDA types, 196,640 prims -- key types: parameter, mulconst, inttofloat"
+  "summary": "69 nodes across 3 contexts; 1 VEX wrangles, 11 HDA types, 196,640 prims -- key types: parameter, mulconst, inttofloat",
+  "thumb": "thumb.webp"
  },
  {
   "id": "noiseSetupB",
@@ -41,7 +44,8 @@
   "prims": 44475,
   "sim": false,
   "toolLit": true,
-  "summary": "117 nodes across 5 contexts; 5 VEX wrangles, 10 HDA types, 44,475 prims -- key types: xform, labs::symmetrize, polyextrude::2.0"
+  "summary": "117 nodes across 5 contexts; 5 VEX wrangles, 10 HDA types, 44,475 prims -- key types: xform, labs::symmetrize, polyextrude::2.0",
+  "thumb": "thumb.webp"
  },
  {
   "id": "rockGeneratorB",
@@ -52,7 +56,8 @@
   "prims": 59584,
   "sim": true,
   "toolLit": true,
-  "summary": "118 nodes across 7 contexts; simulation setup, 5 VEX wrangles, 24 HDA types, 59,584 prims -- key types: parameter, add, attribwrangle"
+  "summary": "118 nodes across 7 contexts; simulation setup, 5 VEX wrangles, 24 HDA types, 59,584 prims -- key types: parameter, add, attribwrangle",
+  "thumb": "thumb.webp"
  },
  {
   "id": "rockGeneratorC",
@@ -63,6 +68,7 @@
   "prims": 34372,
   "sim": true,
   "toolLit": true,
-  "summary": "186 nodes across 7 contexts; simulation setup, 6 VEX wrangles, 25 HDA types, 34,372 prims -- key types: parameter, mulconst, inttofloat"
+  "summary": "186 nodes across 7 contexts; simulation setup, 6 VEX wrangles, 25 HDA types, 34,372 prims -- key types: parameter, mulconst, inttofloat",
+  "thumb": "thumb.webp"
  }
 ]
