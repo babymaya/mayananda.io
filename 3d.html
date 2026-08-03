@@ -112,7 +112,7 @@
             var cap = document.getElementById('lbCap');
 
             function open(entry) {
-                img.src = '/catalog/' + entry.id + '/thumb.png';
+                img.src = '/catalog/' + entry.id + '/' + (entry.thumb || 'thumb.png');
                 img.alt = 'Rendered thumbnail of the scene ' + entry.name;
                 var bits = [];
                 if (entry.year) bits.push(entry.year);
@@ -147,7 +147,7 @@
                         b.type = 'button';
                         b.setAttribute('aria-label', 'View ' + entry.name);
                         var i = document.createElement('img');
-                        i.src = '/catalog/' + entry.id + '/thumb.png';
+                        i.src = '/catalog/' + entry.id + '/' + (entry.thumb || 'thumb.png');
                         i.alt = entry.name;
                         i.loading = 'lazy';
                         i.decoding = 'async';

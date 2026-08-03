@@ -3,22 +3,22 @@
   "title": "cardsbones",
   "items": [
    {
-    "src": "/media/games/cardsbones/CARDS_01_import_deeplink.png",
+    "src": "/media/games/cardsbones/CARDS_01_import_deeplink.webp",
     "type": "image",
     "caption": "CARDS 01 import deeplink"
    },
    {
-    "src": "/media/games/cardsbones/CARDS_02_share.png",
+    "src": "/media/games/cardsbones/CARDS_02_share.webp",
     "type": "image",
     "caption": "CARDS 02 share"
    },
    {
-    "src": "/media/games/cardsbones/CARDS_03_holdem_table.png",
+    "src": "/media/games/cardsbones/CARDS_03_holdem_table.webp",
     "type": "image",
     "caption": "CARDS 03 holdem table"
    },
    {
-    "src": "/media/games/cardsbones/CARDS_04_holdem_result.png",
+    "src": "/media/games/cardsbones/CARDS_04_holdem_result.webp",
     "type": "image",
     "caption": "CARDS 04 holdem result"
    }
@@ -28,27 +28,27 @@
   "title": "rings",
   "items": [
    {
-    "src": "/media/games/rings/TAO_01_game.png",
+    "src": "/media/games/rings/TAO_01_game.webp",
     "type": "image",
     "caption": "TAO 01 game"
    },
    {
-    "src": "/media/games/rings/TAO_02_settings.png",
+    "src": "/media/games/rings/TAO_02_settings.webp",
     "type": "image",
     "caption": "TAO 02 settings"
    },
    {
-    "src": "/media/games/rings/TAO_03_chains_idle.png",
+    "src": "/media/games/rings/TAO_03_chains_idle.webp",
     "type": "image",
     "caption": "TAO 03 chains idle"
    },
    {
-    "src": "/media/games/rings/TAO_04_chains_lit.png",
+    "src": "/media/games/rings/TAO_04_chains_lit.webp",
     "type": "image",
     "caption": "TAO 04 chains lit"
    },
    {
-    "src": "/media/games/rings/TAO_05_game_over.png",
+    "src": "/media/games/rings/TAO_05_game_over.webp",
     "type": "image",
     "caption": "TAO 05 game over"
    }
