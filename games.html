@@ -21,6 +21,7 @@
             <li><a href="/">Home</a></li>
             <li><a href="/3d.html">3D Work</a></li>
             <li><a href="/games.html" aria-current="page">Games</a></li>
+            <li><a href="/ai.html">AI</a></li>
             <li><a href="/pipeline.html">Pipeline</a></li>
             <li><a href="/about.html">About</a></li>
         </ul>
@@ -30,9 +31,8 @@
         <h1>Games</h1>
         <p class="lede">Two Android games written in C11 against raylib.</p>
 
-        <p>Both are built the same way: C11, raylib, Android as the target, and the rules kept
-        separate enough from the renderer that they can be tested on their own. Screenshots
-        below are from phone builds.</p>
+        <p>Both are built the same way: C11, raylib, Android as the target. Screenshots below
+        are from phone builds.</p>
 
         <span class="todo">Both are in development. There are no public builds yet.</span>
 
@@ -48,9 +48,12 @@
         lowest tier is a fixed +1 and a predictable alternation; the highest uses seeded random
         feeds and geometric routing, where the rotation itself decides the path.</p>
 
-        <p>Written in C11 against raylib, with the game logic kept as a headless library so it
-        can be unit-tested away from the renderer. Runs on Android. The board on this site's
-        landing page is the same geometry.</p>
+        <p>Written in C11 against raylib and running on Android. The rules above are the
+        interesting part and they are written down as a specification &mdash; board topology,
+        the propagation tables per difficulty tier, seeded random streams kept separate per
+        purpose so a game can be replayed exactly, and the scoring formula with its constants
+        in config rather than in code. The board on this site's landing page is the same
+        geometry.</p>
 
         <div class="shots" data-set="games/rings" aria-label="Screenshots"></div><p class="shots-hint">Scroll the strip above for more shots.</p>
 

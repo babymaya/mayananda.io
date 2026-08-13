@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>AI — Mayananda</title>
+    <meta name="description" content="Backend structure for work that runs unattended: queues, workers, and machines that hand jobs to each other." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+  <link rel="stylesheet" crossorigin href="/assets/style-Djq7CqGq.css">
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/ai.html" aria-current="page">AI</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>AI</h1>
+        <p class="lede">Backend structure for work that runs unattended — queues, workers, and
+        machines that hand jobs to each other.</p>
+
+        <p>The model call is the cheap part. The expensive part is getting work queued in the
+        right order, onto the right machine, in a process that cannot take the rest of the batch
+        down with it, with something at the end that checks the result was real. The bias
+        throughout is toward boring, inspectable mechanisms: the filesystem instead of a message
+        broker, a directory name instead of a status column, an exit code instead of a model's
+        opinion that it succeeded.</p>
+
+        <h2>a queue where the directory is the status</h2>
+        <div class="shots" data-set="ai/queue" aria-label="Images"></div>
+        <p class="shots-hint">Queue diagrams and run logs, once uploaded.</p>
+        <p>A job is a file. A worker claims it by moving it, does the work, and moves it again to
+        record what happened — so there is no server, no daemon, and nothing to inspect or recover
+        that ordinary file operations cannot reach. The move is atomic, so two workers cannot take
+        the same job.</p>
+<pre>
+ pending --claim--> claimed --> done
+                       |
+                       +------> failed --retry--> parked
+</pre>
+        <p>Parking is the part that earns its keep: a job that keeps failing neither blocks the
+        queue nor disappears. The run continues without it and it is still there to look at
+        afterwards.</p>
+
+        <h2>one process per job</h2>
+        <div class="shots" data-set="ai/isolation" aria-label="Images"></div>
+        <p class="shots-hint">Batch output to come.</p>
+        <p>Every job gets its own process and its own timeout. Thirty scenes opened in one shared
+        interpreter will not finish thirty — one of them hangs, or cooks forever, or takes the
+        interpreter down without raising anything catchable, and the run dies partway with no
+        clear sign of which input killed it. Isolated, that same failure costs one job and a log
+        entry. The price is paying process startup thirty times, and it is worth it.</p>
+
+        <h2>routing work to the machine that can do it</h2>
+        <div class="shots" data-set="ai/brain" aria-label="Images"></div>
+        <p class="shots-hint">Topology diagram to come.</p>
+        <p>Two machines over a private network, with a deliberate asymmetry. Work needing more
+        model than the laptop has goes to the desktop as one of two commands, and the split is a
+        safety boundary rather than a convenience — the thinking one has no tools bound to it at
+        all, so it can answer but cannot touch a filesystem; the acting one produces a plan and
+        does nothing until told to commit.</p>
+<pre>
+ laptop                     desktop
+ +--------+  think ------>  no tools bound   (answers only)
+ | orch.  |  act   ------>  executor         (plan unless committed)
+ +--------+
+     +--> unreachable = exit non-zero, never a silent fallback
+</pre>
+        <p>The failure mode is the design. If the far machine is unreachable the command errors
+        out rather than quietly dropping to the smaller local model, because an answer from
+        something that could not have answered the question is worse than no answer.</p>
+
+        <h2>agents as workers</h2>
+        <div class="shots" data-set="ai/workers" aria-label="Images"></div>
+        <p class="shots-hint">Controller output to come.</p>
+        <p>Model tiers are workers and a controller hands them tasks. Each task declares what it
+        depends on and, more importantly, how to prove it worked: a command that runs after the
+        worker reports finished, whose exit status decides whether the task is done. A worker
+        claiming success is evidence of nothing. Roles are enforced where work is dispatched
+        rather than requested in a prompt, so a tier cannot quietly take another's job.</p>
+        <p>The rest is unhappy paths, and all of it came from watching real runs fail. Bad
+        verification commands are rejected when the task is queued, not discovered hours later.
+        A dead worker is relaunched once, and if it fails again its task parks and the loop keeps
+        going. One controller at a time, enforced with a lock. Crashed runs clean themselves up
+        on the next start. Long batches are scheduled against a hardware wake timer — the machine
+        wakes itself, works the queue, and sleeps — which is only safe because of everything
+        above.</p>
+
+        <h2>how this is put together</h2>
+        <p>Every stage has an observable state and an objective way to tell whether it worked.
+        Status is where a file lives, not a variable someone has to keep updated. Verification is
+        an exit code, not a claim. Failure is bounded to one job. Recovery happens on the next
+        start instead of requiring a person. None of it is specific to models — it is ordinary
+        batch-system design — but it is what makes a model something you can put in a pipeline
+        rather than something you sit and watch.</p>
+        <p>Scope, plainly: systems and orchestration around models — scheduling, routing,
+        isolation, verification. Not model training, and no computer-vision work.</p>
+
+        <a class="back" href="/">&larr; back</a>
+    </main>
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+    <script src="/gallery.js"></script>
+</body>
+</html>
