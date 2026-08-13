@@ -11,6 +11,7 @@ export default {
                 main: resolve(process.cwd(), 'index.html'),
                 work: resolve(process.cwd(), '3d.html'),
                 games: resolve(process.cwd(), 'games.html'),
+                ai: resolve(process.cwd(), 'ai.html'),
                 pipeline: resolve(process.cwd(), 'pipeline.html'),
                 about: resolve(process.cwd(), 'about.html'),
             },
