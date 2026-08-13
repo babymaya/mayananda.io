@@ -7,7 +7,7 @@
     <title>AI — Mayananda</title>
     <meta name="description" content="Backend structure for work that runs unattended: queues, workers, and machines that hand jobs to each other." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
-  <link rel="stylesheet" crossorigin href="/assets/style-Djq7CqGq.css">
+  <link rel="stylesheet" crossorigin href="/assets/style-q1kQezv0.css">
 </head>
 <body class="page">
 
@@ -98,6 +98,45 @@
         on the next start. Long batches are scheduled against a hardware wake timer — the machine
         wakes itself, works the queue, and sleeps — which is only safe because of everything
         above.</p>
+
+        <h2>controlling one machine from another</h2>
+        <div class="shots" data-set="ai/remote" aria-label="Images"></div>
+        <p class="shots-hint">Session capture to come.</p>
+        <p>The most complete version of the two-machine idea is a pair of programs that let a
+        laptop drive a desktop as if sitting at it. One side captures the screen, compresses it
+        to video, and sends it; the other shows it in a window and sends keyboard, mouse and
+        clipboard back over the same connection. Written in Go, using the operating system's own
+        capture path and a hardware video encoder, because a remote screen is only useful if it
+        keeps up.</p>
+        <p>Security is built in rather than added later, on the reasoning that this is a program
+        whose entire purpose is letting one computer type into another. The connection is
+        encrypted and the client checks it is talking to the machine it expects by fingerprint,
+        aborting before any data moves if that does not match. Sessions are authenticated with a
+        long random token compared in constant time, only one client may hold control at a time,
+        an idle connection is dropped, and incoming input is rate-limited so a flood cannot be
+        used to hammer the far machine. Where something is deliberately not done yet — rotating
+        the session token, for one — it is written down as such rather than implied to be
+        finished.</p>
+
+        <h2>tools and skills</h2>
+        <table>
+            <thead>
+                <tr><th scope="col">Area</th><th scope="col">What it is used for here</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Go</td><td>The remote-control pair, the render farm's job handling, and the agent services. Chosen for single-binary deployment and for concurrency that is easy to reason about.</td></tr>
+                <tr><td>Python</td><td>Everything that runs inside the 3D application headlessly &mdash; rendering jobs, scene probing, thumbnail capture.</td></tr>
+                <tr><td>PowerShell</td><td>The orchestration layer: queue workers, job submission, status and recovery, scheduling.</td></tr>
+                <tr><td>C / cgo</td><td>Bridging Go to the platform capture and video-encoding libraries.</td></tr>
+                <tr><td>Video encoding</td><td>Real-time H.264 compression of captured frames, plus measuring the codec path rather than assuming it.</td></tr>
+                <tr><td>Network security</td><td>Modern TLS, certificate pinning, constant-time token comparison, address allow-listing, rate limiting, single-session enforcement.</td></tr>
+                <tr><td>Local model runtimes</td><td>Running quantised models on consumer hardware and serving them behind one endpoint.</td></tr>
+                <tr><td>Agent tooling</td><td>Defining typed operations a model may call, and the protocol that carries them into a running application.</td></tr>
+                <tr><td>Queues and scheduling</td><td>Atomic claiming, dependency ordering, retry and parking policy, crash recovery, hardware wake timers.</td></tr>
+                <tr><td>Testing</td><td>Queue invariants and codec behaviour covered by tests that run without the heavy software installed.</td></tr>
+                <tr><td>Version control</td><td>Distributed for source; a centralised depot with exclusive checkout for binary art.</td></tr>
+            </tbody>
+        </table>
 
         <h2>how this is put together</h2>
         <p>Every stage has an observable state and an objective way to tell whether it worked.
