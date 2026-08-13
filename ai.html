@@ -99,6 +99,32 @@
         wakes itself, works the queue, and sleeps — which is only safe because of everything
         above.</p>
 
+        <h2>an agent that looks at what it just did</h2>
+        <div class="shots" data-set="ai/loop" aria-label="Images"></div>
+        <p class="shots-hint">Session frames to come.</p>
+        <p>Applied to game and interface work, the verification idea gets more interesting,
+        because the thing you want to check is not a number or an exit code &mdash; it is whether
+        the screen looks right. So the loop closes visually: build the thing, run it, capture
+        frames of it running, and hand those frames to a model that reads them back and reports
+        what is wrong with the layout. A proposed fix is applied, and then the same loop runs
+        again to decide whether the original complaint actually went away. Checking the fix is
+        treated as a separate step from making it, for the same reason a worker reporting success
+        is not evidence anywhere else in this system.</p>
+        <p>Around that sit the ordinary but necessary parts: sessions that persist so a long run
+        can be stopped and resumed, checkpoints written without blocking the work in progress, and
+        cheaper and stronger model tiers configured for different steps rather than one model
+        doing everything. It is the oldest piece here and the least tidy &mdash; it depends on a
+        shared component kept outside the project, so it is a design worth describing rather than
+        something to pick up and run.</p>
+<pre>
+ build --> run --> capture frames --> model reads the frames
+   ^                                          |
+   |                                    proposed fix
+   |                                          |
+   +---------------- apply -------------------+
+              then re-check, as its own step
+</pre>
+
         <h2>controlling one machine from another</h2>
         <div class="shots" data-set="ai/remote" aria-label="Images"></div>
         <p class="shots-hint">Session capture to come.</p>
@@ -132,6 +158,7 @@
                 <tr><td>Network security</td><td>Modern TLS, certificate pinning, constant-time token comparison, address allow-listing, rate limiting, single-session enforcement.</td></tr>
                 <tr><td>Local model runtimes</td><td>Running quantised models on consumer hardware and serving them behind one endpoint.</td></tr>
                 <tr><td>Agent tooling</td><td>Defining typed operations a model may call, and the protocol that carries them into a running application.</td></tr>
+                <tr><td>Vision checking</td><td>Reading a rendered screen back with a model to judge whether a change did what it was supposed to. Using vision models, not training them.</td></tr>
                 <tr><td>Queues and scheduling</td><td>Atomic claiming, dependency ordering, retry and parking policy, crash recovery, hardware wake timers.</td></tr>
                 <tr><td>Testing</td><td>Queue invariants and codec behaviour covered by tests that run without the heavy software installed.</td></tr>
                 <tr><td>Version control</td><td>Distributed for source; a centralised depot with exclusive checkout for binary art.</td></tr>
