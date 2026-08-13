@@ -32,90 +32,59 @@
         <p class="lede">Backend structure for work that runs unattended — queues, workers, and
         machines that hand jobs to each other.</p>
 
-        <p>The model call is the cheap part. The expensive part is getting work queued in the
-        right order, onto the right machine, in a process that cannot take the rest of the batch
-        down with it, with something at the end that checks the result was real. The bias
-        throughout is toward boring, inspectable mechanisms: the filesystem instead of a message
-        broker, a directory name instead of a status column, an exit code instead of a model's
-        opinion that it succeeded.</p>
+        <p>The model call is the cheap part. The rest is scheduling, isolation, routing and
+        verification. The bias throughout is toward mechanisms you can inspect with ordinary
+        tools: the filesystem instead of a broker, a directory name instead of a status column,
+        an exit code instead of a model's opinion that it succeeded.</p>
 
         <h2>a queue where the directory is the status</h2>
-        <div class="shots" data-set="ai/queue" aria-label="Images"></div>
-        <p class="shots-hint">Queue diagrams and run logs, once uploaded.</p>
-        <p>A job is a file. A worker claims it by moving it, does the work, and moves it again to
-        record what happened — so there is no server, no daemon, and nothing to inspect or recover
-        that ordinary file operations cannot reach. The move is atomic, so two workers cannot take
-        the same job.</p>
+        <p>A job is a file. A worker claims it by moving it, then moves it again to record the
+        outcome. No server, no daemon; the move is atomic, so two workers cannot take one job.
+        A job that keeps failing parks — it neither blocks the queue nor disappears.</p>
 <pre>
  pending --claim--> claimed --> done
                        |
                        +------> failed --retry--> parked
+
+ job file    declares: input, verify command, dependencies
+ state       is the directory it currently sits in
+ record      one result file + one log per job, kept after the run
 </pre>
-        <p>Parking is the part that earns its keep: a job that keeps failing neither blocks the
-        queue nor disappears. The run continues without it and it is still there to look at
-        afterwards.</p>
 
         <h2>one process per job</h2>
-        <div class="shots" data-set="ai/isolation" aria-label="Images"></div>
-        <p class="shots-hint">Batch output to come.</p>
-        <p>Every job gets its own process and its own timeout. Thirty scenes opened in one shared
-        interpreter will not finish thirty — one of them hangs, or cooks forever, or takes the
-        interpreter down without raising anything catchable, and the run dies partway with no
-        clear sign of which input killed it. Isolated, that same failure costs one job and a log
-        entry. The price is paying process startup thirty times, and it is worth it.</p>
+        <p>Each job gets its own process and its own timeout. Batches of scenes in one shared
+        interpreter do not survive: one hangs or takes the interpreter down without raising
+        anything catchable, and the run dies partway with no sign of which input killed it.
+        Isolated, that costs one job and a log entry. The price is process startup per job.</p>
 
         <h2>routing work to the machine that can do it</h2>
-        <div class="shots" data-set="ai/brain" aria-label="Images"></div>
-        <p class="shots-hint">Topology diagram to come.</p>
-        <p>Two machines over a private network, with a deliberate asymmetry. Work needing more
-        model than the laptop has goes to the desktop as one of two commands, and the split is a
-        safety boundary rather than a convenience — the thinking one has no tools bound to it at
-        all, so it can answer but cannot touch a filesystem; the acting one produces a plan and
-        does nothing until told to commit.</p>
+        <p>Two machines over a private network, split on purpose. Work needing more model than
+        the laptop has crosses to the desktop as one of two commands. The split is a safety
+        boundary, not a convenience.</p>
 <pre>
  laptop                     desktop
- +--------+  think ------>  no tools bound   (answers only)
- | orch.  |  act   ------>  executor         (plan unless committed)
+ +--------+  think ------>  no tools bound   (answers only, cannot touch files)
+ | orch.  |  act   ------>  executor         (emits a plan; acts only on commit)
  +--------+
-     +--> unreachable = exit non-zero, never a silent fallback
+     far side unreachable --> exit non-zero, never a silent local fallback
 </pre>
-        <p>The failure mode is the design. If the far machine is unreachable the command errors
-        out rather than quietly dropping to the smaller local model, because an answer from
-        something that could not have answered the question is worse than no answer.</p>
 
         <h2>agents as workers</h2>
-        <div class="shots" data-set="ai/workers" aria-label="Images"></div>
-        <p class="shots-hint">Controller output to come.</p>
-        <p>Model tiers are workers and a controller hands them tasks. Each task declares what it
-        depends on and, more importantly, how to prove it worked: a command that runs after the
-        worker reports finished, whose exit status decides whether the task is done. A worker
-        claiming success is evidence of nothing. Roles are enforced where work is dispatched
-        rather than requested in a prompt, so a tier cannot quietly take another's job.</p>
-        <p>The rest is unhappy paths, and all of it came from watching real runs fail. Bad
-        verification commands are rejected when the task is queued, not discovered hours later.
-        A dead worker is relaunched once, and if it fails again its task parks and the loop keeps
-        going. One controller at a time, enforced with a lock. Crashed runs clean themselves up
-        on the next start. Long batches are scheduled against a hardware wake timer — the machine
-        wakes itself, works the queue, and sleeps — which is only safe because of everything
-        above.</p>
+        <p>Model tiers are workers; a controller hands them tasks. Every task declares its
+        dependencies and a command that proves it worked — the exit status decides, not the
+        worker's report. Roles are pinned where work is dispatched, not requested in a prompt.</p>
+<pre>
+ task        depends_on: [...]   verify: &lt;command&gt;   tier: cheap | strong
+ dispatch    one controller at a time, held by a lock
+ failure     dead worker relaunched once, then the task parks and the loop continues
+ recovery    a crashed run is cleaned up on next start, not by hand
+ unattended  batches scheduled against a hardware wake timer: wake, drain, sleep
+</pre>
 
         <h2>an agent that looks at what it just did</h2>
-        <div class="shots" data-set="ai/loop" aria-label="Images"></div>
-        <p class="shots-hint">Session frames to come.</p>
-        <p>Applied to game and interface work, the verification idea gets more interesting,
-        because the thing you want to check is not a number or an exit code &mdash; it is whether
-        the screen looks right. So the loop closes visually: build the thing, run it, capture
-        frames of it running, and hand those frames to a model that reads them back and reports
-        what is wrong with the layout. A proposed fix is applied, and then the same loop runs
-        again to decide whether the original complaint actually went away. Checking the fix is
-        treated as a separate step from making it, for the same reason a worker reporting success
-        is not evidence anywhere else in this system.</p>
-        <p>Around that sit the ordinary but necessary parts: sessions that persist so a long run
-        can be stopped and resumed, checkpoints written without blocking the work in progress, and
-        cheaper and stronger model tiers configured for different steps rather than one model
-        doing everything. It is the oldest piece here and the least tidy &mdash; it depends on a
-        shared component kept outside the project, so it is a design worth describing rather than
-        something to pick up and run.</p>
+        <p>For game and interface work the thing to check is not a number, it is whether the
+        screen looks right. So the loop closes visually, and checking the fix is a separate step
+        from making it.</p>
 <pre>
  build --> run --> capture frames --> model reads the frames
    ^                                          |
@@ -123,26 +92,38 @@
    |                                          |
    +---------------- apply -------------------+
               then re-check, as its own step
+
+ also: resumable sessions, non-blocking checkpoints, cheap/strong tiers per step
+</pre>
+        <p>The oldest piece here and the least tidy — it depends on a shared component kept
+        outside the project, so it is a design worth describing rather than something to pick
+        up and run.</p>
+
+        <h2>a shader environment built to be described</h2>
+        <p>One renderer, two front ends: a hot-reloading window for a person, and a headless
+        capture that writes frames at chosen times. Same shader, same uniforms, same pixels — so
+        a model can be handed the actual output instead of a description of it. That closed the
+        round-trip cost of asking whether a visual change landed.</p>
+<pre>
+ renderer    shared; windowed and headless differ only in the window layer
+ capture     frames at given times and size --> images a model reads back
+ overlay     separate binary: two windowing libraries cannot co-link on Windows
+ chat        two append-only files, one per direction; single writer each
+ model call  none in the app -- it shells out to a local CLI
 </pre>
 
         <h2>controlling one machine from another</h2>
-        <div class="shots" data-set="ai/remote" aria-label="Images"></div>
-        <p class="shots-hint">Session capture to come.</p>
-        <p>The most complete version of the two-machine idea is a pair of programs that let a
-        laptop drive a desktop as if sitting at it. One side captures the screen, compresses it
-        to video, and sends it; the other shows it in a window and sends keyboard, mouse and
-        clipboard back over the same connection. Written in Go, using the operating system's own
-        capture path and a hardware video encoder, because a remote screen is only useful if it
-        keeps up.</p>
-        <p>Security is built in rather than added later, on the reasoning that this is a program
-        whose entire purpose is letting one computer type into another. The connection is
-        encrypted and the client checks it is talking to the machine it expects by fingerprint,
-        aborting before any data moves if that does not match. Sessions are authenticated with a
-        long random token compared in constant time, only one client may hold control at a time,
-        an idle connection is dropped, and incoming input is rate-limited so a flood cannot be
-        used to hammer the far machine. Where something is deliberately not done yet — rotating
-        the session token, for one — it is written down as such rather than implied to be
-        finished.</p>
+        <p>A pair of programs that let a laptop drive a desktop as if sitting at it: one side
+        captures the screen, encodes it and sends it; the other displays it and sends keyboard,
+        mouse and clipboard back. Go, the operating system's own capture path, hardware H.264 —
+        a remote screen is only useful if it keeps up.</p>
+<pre>
+ transport   encrypted; client pins the host by certificate fingerprint and
+             aborts before any data moves if it does not match
+ session     long random token, constant-time compare, one controller at a time,
+             idle disconnect, rate-limited input, address allow-list
+ honesty     what is not done yet (session-token rotation) is written down as such
+</pre>
 
         <h2>tools and skills</h2>
         <table>
@@ -153,7 +134,8 @@
                 <tr><td>Go</td><td>The remote-control pair, the render farm's job handling, and the agent services. Chosen for single-binary deployment and for concurrency that is easy to reason about.</td></tr>
                 <tr><td>Python</td><td>Everything that runs inside the 3D application headlessly &mdash; rendering jobs, scene probing, thumbnail capture.</td></tr>
                 <tr><td>PowerShell</td><td>The orchestration layer: queue workers, job submission, status and recovery, scheduling.</td></tr>
-                <tr><td>C / cgo</td><td>Bridging Go to the platform capture and video-encoding libraries.</td></tr>
+                <tr><td>C / cgo</td><td>Bridging Go to the platform capture, video-encoding and OpenGL libraries.</td></tr>
+                <tr><td>GLSL / OpenGL</td><td>The shader environment: one renderer driving both a live window and headless frame capture.</td></tr>
                 <tr><td>Video encoding</td><td>Real-time H.264 compression of captured frames, plus measuring the codec path rather than assuming it.</td></tr>
                 <tr><td>Network security</td><td>Modern TLS, certificate pinning, constant-time token comparison, address allow-listing, rate limiting, single-session enforcement.</td></tr>
                 <tr><td>Local model runtimes</td><td>Running quantised models on consumer hardware and serving them behind one endpoint.</td></tr>
@@ -166,12 +148,11 @@
         </table>
 
         <h2>how this is put together</h2>
-        <p>Every stage has an observable state and an objective way to tell whether it worked.
-        Status is where a file lives, not a variable someone has to keep updated. Verification is
-        an exit code, not a claim. Failure is bounded to one job. Recovery happens on the next
-        start instead of requiring a person. None of it is specific to models — it is ordinary
-        batch-system design — but it is what makes a model something you can put in a pipeline
-        rather than something you sit and watch.</p>
+        <p>Four rules run through all of it. Status is where a file lives, not a variable someone
+        keeps updated. Verification is an exit code, not a claim. Failure is bounded to one job.
+        Recovery happens on the next start, not by hand. None of that is specific to models — it
+        is ordinary batch-system design — but it is what makes a model something you can put in a
+        pipeline rather than sit and watch.</p>
         <p>Scope, plainly: systems and orchestration around models — scheduling, routing,
         isolation, verification. Not model training, and no computer-vision work.</p>
 
