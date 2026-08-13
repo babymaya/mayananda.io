@@ -453,3 +453,51 @@ body.scene-failed section.scrub { height: 0; }
     color: #ffc94d;
     margin: 1.6rem 0 0.4rem;
 }
+
+/* ASCII diagrams. Wider than a phone, so they scroll inside their own box
+   rather than pushing the page sideways (body is overflow-x: hidden, so an
+   overflowing pre would simply be clipped and unreadable). */
+.page pre {
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: #9a9a9a;
+    margin: 1.4rem 0;
+    padding-bottom: 0.4rem;
+}
+
+/* Tables (proficiency on /about, tools on /ai). Left unstyled until now, so
+   they rendered on browser defaults against a black page. */
+.page table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.2rem 0 2rem;
+    font-size: 0.92rem;
+}
+
+.page thead th {
+    text-align: left;
+    text-transform: lowercase;
+    letter-spacing: 0.06em;
+    font-weight: normal;
+    color: #c10f0f;
+    border-bottom: 1px solid #2a2a2a;
+    padding: 0 0.9rem 0.5rem 0;
+}
+
+.page tbody td {
+    vertical-align: top;
+    border-bottom: 1px solid #1a1a1a;
+    padding: 0.55rem 0.9rem 0.55rem 0;
+    color: #d8d8d8;
+}
+
+.page tbody td:first-child {
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.page td.level {
+    color: #9a9a9a;
+}
