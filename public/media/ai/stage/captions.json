@@ -1,0 +1,8 @@
+{
+  "_title": "Stage system",
+  "01_notation_card": "One dancer, one phrase: red start, yellow path, green end",
+  "02_pattern_editor": "The authoring grid: cells carry meaning, not just colour",
+  "03_sequencer_cockpit": "Four lanes on absolute time, playhead running, live output left",
+  "04_valid_next_patterns": "Only the patterns that can follow the last one are offered",
+  "05_projector_alignment": "Corner-pin alignment onto the floor"
+}

@@ -501,3 +501,176 @@ body.scene-failed section.scrub { height: 0; }
 .page td.level {
     color: #9a9a9a;
 }
+
+/* ======================================================================
+   Effects layer
+   ====================================================================== */
+
+/* The animated background sits behind everything and never takes a click.
+   The bare `canvas` rule above puts the hero canvas at z-index 0, so this one
+   is pinned explicitly rather than inheriting it. */
+canvas.fx-bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* Not -1. html and body both paint a black background, and a negative
+       z-index child paints behind its ancestor's background — the canvas would
+       be invisible. It sits at 0 and the content is lifted above it instead. */
+    z-index: 0;
+    pointer-events: none;
+    display: block;
+}
+
+/* The transition layer. Hidden until a navigation starts.
+
+   These are real DOM elements rather than a canvas on purpose: `backdrop-filter`
+   samples the actual page behind each shard, which is the only way to refract
+   the real content. A shader cannot see the DOM. */
+.fx-glass-root {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    display: none;
+    /* Its own stacking/containing context, so shards position against the
+       viewport and never extend the page's scroll area. */
+    contain: strict;
+    overflow: hidden;
+}
+
+/* The full-window blur — edge to edge, over everything, including the nav and
+   the animated background. */
+.fx-veil {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    will-change: opacity, backdrop-filter;
+}
+
+/* One glass shard. No border, no outline, no rim: the only edges are where two
+   neighbours refract differently. */
+.fx-shard {
+    position: absolute;
+    opacity: 0;
+    will-change: transform, opacity;
+    /* Promote each shard so a dozen backdrop-filters do not re-rasterise the
+       page every frame. */
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+}
+
+/* The filter definitions carry no visual output themselves. */
+svg.fx-glass-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* ---- terminal frame ----------------------------------------------------
+   Used on /ai, /pipeline and /about. The page is already monospace; this adds
+   the window itself — a chrome bar, a border, and a prompt at the end. */
+
+.page.terminal main {
+    position: relative;
+    max-width: 52rem;
+    margin: clamp(3rem, 8vw, 5rem) auto clamp(3rem, 8vw, 5rem);
+    padding: 4rem clamp(1.1rem, 4vw, 2.2rem) 2.5rem;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    /* Not fully opaque: on /ai the simulation stays faintly visible behind the
+       text instead of being boxed out of the middle of the screen. */
+    background: rgba(0, 0, 0, 0.74);
+    z-index: 2;
+    box-shadow: 0 0 0 1px rgba(193, 15, 15, 0.08), 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.page.terminal main::before {
+    content: attr(data-term);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2.1rem;
+    line-height: 2.1rem;
+    padding-left: 3.6rem;
+    padding-right: 0.9rem;
+    border-bottom: 1px solid #2a2a2a;
+    border-radius: 3px 3px 0 0;
+    background-color: #0d0d0d;
+    background-image:
+        radial-gradient(circle 4px at 1.0rem 50%, #c10f0f 96%, transparent 100%),
+        radial-gradient(circle 4px at 1.85rem 50%, #4a4a4a 96%, transparent 100%),
+        radial-gradient(circle 4px at 2.7rem 50%, #2a2a2a 96%, transparent 100%);
+    background-repeat: no-repeat;
+    color: #6f6f6f;
+    font-size: 0.76rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* A prompt closes the window, so the page ends on something rather than
+   trailing off. */
+.page.terminal main::after {
+    content: "> _";
+    display: block;
+    margin-top: 2.2rem;
+    color: #c10f0f;
+    font-size: 0.85rem;
+    animation: fx-blink 1.2s step-end infinite;
+}
+
+@keyframes fx-blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.25; }
+}
+
+/* Scanlines. Kept faint — this is texture, not a filter over the text. */
+.page.terminal::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.022) 0px,
+        rgba(255, 255, 255, 0.022) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+}
+
+.page.terminal main > * {
+    position: relative;
+    z-index: 2;
+}
+
+@media (max-width: 480px) {
+    .page.terminal main {
+        border-left: none;
+        border-right: none;
+        border-radius: 0;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page.terminal main::after { animation: none; }
+}
+
+/* Lift the rest of the page above the background canvas. */
+.page.terminal footer,
+.page.terminal #nav {
+    position: relative;
+    z-index: 6;
+}
+
+.page.terminal #nav {
+    position: fixed;
+}
