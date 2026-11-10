@@ -5,8 +5,21 @@ with [three.js](https://threejs.org/) and bundled by [Vite](https://vite.dev/).
 
 The page renders a set of concentric polygon rings nested on a gimbal. Scroll
 position drives the gimbal's rotation, video is mapped onto the mesh at the centre,
-and a set of small boxes mounted in each ring spin continuously. Everything else on
-the page is a logo and a footer.
+and a set of small boxes mounted in each ring spin continuously.
+
+Home page since 2026-11-10 (branch `fx/effects-layer`, not live yet):
+
+- The rings sweep in, twist once, then collapse ring by ring into a small ring
+  above the tray (`main.js`). The image and video wall and the top-right menu are
+  gone from the home page.
+- At the bottom of the scroll a tray opens draggable windows for client work, 3d,
+  coding, personal work and about (`desktop.js`; content still placeholder).
+- While the tray is up, `fx/overlay-life.js` draws a reaction-diffusion and Game of
+  Life overlay over the rings; a click seeds it. Self-contained WebGL2, loaded only
+  when first needed.
+
+The other pages (`3d`, `games`, `ai`, `pipeline`, `about`, and the new `laser`,
+`houdini*` and `shaders` pages) still use the top-right menu.
 
 ## Local development
 
