@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Rendering and cataloguing — Mayananda</title>
+    <meta name="description" content="A file-based render queue and a tool that opens old Houdini scenes and records what they contain." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .page tbody td:first-child { white-space: normal; }
+        .page ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+        .page .section-links { font-size: 0.85rem; margin: 0 0 2.5rem; }
+        .page .section-links a { margin-right: 1.1rem; display: inline-block; }
+        .page .section-links a[aria-current="page"] { color: #ffffff; text-decoration: none; }
+    </style>
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/ai.html">AI</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Rendering and cataloguing</h1>
+        <p class="lede">A file-based render queue and a tool that opens old Houdini scenes and records what they contain.</p>
+        <p class="section-links"><a href="/houdini.html">Overview</a>
+            <a href="/houdini-ai.html">AI inside Houdini</a>
+            <a href="/houdini-comfyui.html">Houdini and ComfyUI</a>
+            <a href="/houdini-render.html" aria-current="page">Rendering and cataloguing</a>
+            <a href="/houdini-print.html">Houdini to Bambu Studio</a></p>
+
+        <h2>Render job queue</h2>
+        <p>The queue has no server. Each job is a file, and the folder that holds it is its
+        status.</p>
+<pre>
+ pending &gt; claimed &gt; done
+              |
+              +----&gt; failed
+              |
+              +----&gt; parked (held by an operator)
+</pre>
+        <ul>
+            <li><strong>Claim.</strong> A worker claims a job with an atomic rename, so only one
+            worker can win it.</li>
+            <li><strong>Isolation.</strong> Each job runs in its own headless process with a
+            time limit. A scene that hangs or crashes fails only its own job.</li>
+            <li><strong>Recovery.</strong> A sweep returns jobs from dead workers to the queue. A
+            recovered job can render twice, by design.</li>
+            <li><strong>No render node.</strong> If a job names no render node, the worker fits a
+            camera and renders a preview. This shows if a scene renders at all. It does not
+            replace an artist's setup.</li>
+        </ul>
+        <p>In the end-to-end test, a worker claimed a job, rendered a real test frame in
+        12.3 s, and wrote the result. Queue rules pass 20 of 20 checks.</p>
+        <p><strong>Limit:</strong> the system has run on one machine only. The two-machine claim
+        over a network share is a design argument and has not been tested.</p>
+
+        <h2>Scene cataloguer</h2>
+        <p>Old scenes can hang, crash, or need missing files. The cataloguer opens each scene in
+        its own bounded headless process. It writes a thumbnail and a structured summary, and
+        then merges the results for the site grid.</p>
+        <ul>
+            <li><strong>Display flag rescue.</strong> If a display flag cooks to nothing, the tool
+            finds the best end of the node chain. This rescued 4 scenes from empty images.</li>
+            <li><strong>Camera fit.</strong> The camera fits the smaller of the two fields of
+            view, and then tightens to 88% fill against the real bounds.</li>
+            <li><strong>Curation.</strong> Of 30 scenes probed, 13 are in the catalogue and 6 are
+            on the <a href="/3d.html">3D Work</a> page.</li>
+        </ul>
+
+        <h2>End-node captures</h2>
+        <p>This mode takes one labelled viewport image of every end node of every scene. In
+        Houdini 22, a second headless OpenGL render in one process crashes it, so each image
+        gets its own process. Progress is saved per scene, so a stopped run continues where it
+        ended.</p>
+        <p><strong>State:</strong> 101 scenes and 367 images are done. The run is paused at
+        scene 102 of 439. Scenes with over 1000 nodes used too much memory on a 16 GB machine,
+        and a per-process memory limit is not built yet.</p>
+
+        <h2>API check before code</h2>
+        <p>Houdini's Python API has many names that look correct and do not exist. A small
+        tool asks a real Houdini what a call or parameter is named before any code uses it.</p>
+
+        <a class="back" href="/houdini.html">&larr; back</a>
+    </main>
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

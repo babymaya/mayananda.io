@@ -22,6 +22,7 @@
     <meta property="og:image" content="https://mayananda.com/logoA.png" />
     <meta name="twitter:card" content="summary_large_image" />
 
+    <link rel="preload" href="/rings.glb" as="fetch" crossorigin />
     <link rel="stylesheet" href="/style.css">
 
 </head>
@@ -35,28 +36,9 @@
     <div style="position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0">
         <h1>Mayananda — Armillary Rings</h1>
         <p>An interactive WebGL piece. Concentric polygon rings are nested on a
-           gimbal and rotate as you scroll; video is mapped onto the mesh at the
-           centre. Contact details are at the foot of the page.</p>
+           gimbal and rotate as you scroll. A tray at the bottom of the page opens
+           the client work, 3D, coding, personal work, and about pages.</p>
     </div>
-
-    <!-- Top-right nav. Closed it is three lines; open it becomes a caret and the
-         page names slide out beneath it. The list is a placeholder — edit these
-         <a> items as pages are added. -->
-    <nav id="nav">
-        <button id="navToggle" type="button" aria-expanded="false"
-                aria-controls="navMenu" aria-label="Open menu">
-            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
-            <span class="caret" aria-hidden="true">^</span>
-        </button>
-        <ul id="navMenu">
-            <li><a href="/" aria-current="page">Home</a></li>
-            <li><a href="/3d.html">3D Work</a></li>
-            <li><a href="/games.html">Games</a></li>
-            <li><a href="/ai.html">AI</a></li>
-            <li><a href="/pipeline.html">Pipeline</a></li>
-            <li><a href="/about.html">About</a></li>
-        </ul>
-    </nav>
 
     <div class='container'>
         <img src="logoA.png" id="logo" alt="Mayananda logo"/>
@@ -66,45 +48,15 @@
          on desktop and on a phone. -->
     <section class="scrub"></section>
 
-    <!-- Source for the video texture mapped onto the green trigram meshes.
-         muted + playsinline are required for iOS to play it at all; it is
-         never displayed as a DOM element. -->
-    <video id="reel" loop muted playsinline preload="auto" crossorigin="anonymous"
+    <!-- Source for the video texture mapped onto the gold boxes. Loaded by
+         main.js after the rings are on screen. muted + playsinline are required
+         for iOS to play it at all; it is never displayed as a DOM element. -->
+    <video id="reel" loop muted playsinline preload="none" crossorigin="anonymous"
            style="display:none">
         <source src="/mayaReelA.mp4" type="video/mp4">
     </video>
 
-    <footer>
-        <p>email: <a href="mailto:mayalilananda@gmail.com"
-              aria-label="Email mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
-        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener"
-              aria-label="Instagram: @sri_mayananda (opens in a new tab)">@sri_mayananda</a></p>
-    </footer>
-
-    <script>
-        // Nav toggle. Kept out of main.js so the menu still works if WebGL or the
-        // model fails to load.
-        (function () {
-            var nav = document.getElementById('nav');
-            var btn = document.getElementById('navToggle');
-            btn.addEventListener('click', function () {
-                var open = nav.classList.toggle('open');
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-            });
-            // Escape closes it, which a keyboard user will expect.
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape' && nav.classList.contains('open')) {
-                    nav.classList.remove('open');
-                    btn.setAttribute('aria-expanded', 'false');
-                    btn.setAttribute('aria-label', 'Open menu');
-                    btn.focus();
-                }
-            });
-        })();
-    </script>
-
+    <script type="module" src="/desktop.js"></script>
     <script type="module" src="/main.js"></script>
-    <script type="module" src="/fx/site.js"></script>
 </body>
 </html>

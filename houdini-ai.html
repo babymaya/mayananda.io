@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>AI inside Houdini — Mayananda</title>
+    <meta name="description" content="Two separate channels: one lets Claude act on a live Houdini session, and one lets you talk to Claude in a Houdini panel." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/style.css">
+    <style>
+        .page tbody td:first-child { white-space: normal; }
+        .page ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+        .page .section-links { font-size: 0.85rem; margin: 0 0 2.5rem; }
+        .page .section-links a { margin-right: 1.1rem; display: inline-block; }
+        .page .section-links a[aria-current="page"] { color: #ffffff; text-decoration: none; }
+    </style>
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/ai.html">AI</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>AI inside Houdini</h1>
+        <p class="lede">Two separate channels: one lets Claude act on a live Houdini session, and one lets you talk to Claude in a Houdini panel.</p>
+        <p class="section-links"><a href="/houdini.html">Overview</a>
+            <a href="/houdini-ai.html" aria-current="page">AI inside Houdini</a>
+            <a href="/houdini-comfyui.html">Houdini and ComfyUI</a>
+            <a href="/houdini-render.html">Rendering and cataloguing</a>
+            <a href="/houdini-print.html">Houdini to Bambu Studio</a></p>
+
+        <h2>Live session bridge</h2>
+<pre>
+ Claude
+   |  MCP over stdio
+   v
+ Bridge server (Python standard library only)
+   |  local TCP
+   v
+ Listener inside Houdini
+   |  main thread
+   v
+ Live scene
+</pre>
+        <ul>
+            <li><strong>Tools.</strong> Ten tools read the scene, create and delete nodes, read
+            and set parameters, return cook errors and geometry statistics, run Python, and
+            return a VEX reference sheet.</li>
+            <li><strong>Threading.</strong> Every call runs on the Houdini main thread, because
+            the API is not safe from a socket thread.</li>
+            <li><strong>Start.</strong> A Houdini package starts the bridge when the interface
+            opens. The same bridge also runs headless.</li>
+            <li><strong>Access.</strong> The listener accepts local connections only. It runs any
+            Python that it receives, by design, so it is for a trusted local session.</li>
+        </ul>
+
+        <h2>Chat panel</h2>
+<pre>
+ Panel in Houdini
+   |  message file (panel writes)
+   v
+ Watcher process &gt; Claude CLI &gt; bridge &gt; scene
+   |  reply file (watcher writes)
+   v
+ Panel in Houdini
+</pre>
+        <ul>
+            <li><strong>Transport.</strong> Two append-only files carry the messages, and each
+            file has one writer. Either side can restart with no loss.</li>
+            <li><strong>Interface.</strong> The panel never waits on another process, so a slow
+            reply cannot freeze Houdini. It shows if the watcher runs, and it can start it.</li>
+            <li><strong>Scene access.</strong> The panel can use the bridge, so Claude can act on
+            the scene as well as discuss it.</li>
+        </ul>
+
+        <h2>How it was verified</h2>
+        <p>A test object with 77 points existed only in the live scene. A question typed in the
+        real panel returned 77 through the real chain, with nothing simulated. A repeat on
+        Houdini 22 returned 65 points from a new test object in 12 s.</p>
+        <p>The tests found real defects:</p>
+        <ul>
+            <li>Houdini runs package start-up code with no file path variable. Autostart failed
+            with no visible error until a test copied that condition.</li>
+            <li>Non-ASCII text was corrupted because one direction of each pipe used the Windows
+            code page. Both directions now use UTF-8.</li>
+            <li>The panel imported a Qt version that Houdini no longer ships.</li>
+        </ul>
+
+        <h2>Limits</h2>
+        <ul>
+            <li>A bridge call stops waiting after 180 s, but the work continues in Houdini.
+            Sending the call again starts a second render.</li>
+            <li>Windows application control can block Houdini's Python and stop the watcher
+            button. A manual start works.</li>
+            <li>The code that reports the selected node has not run in a live panel.</li>
+        </ul>
+
+        <a class="back" href="/houdini.html">&larr; back</a>
+    </main>
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

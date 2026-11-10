@@ -32,7 +32,7 @@ img, video {
 /* Scroll runway for the three acts: rings unwind, rig recedes, image array rises.
    In vh so the sequence is the same length in screenfuls on desktop and phone. */
 section.scrub {
-    height: 600vh;
+    height: 450vh;
     background-color: transparent;
     pointer-events: none;    /* clicks pass through to the canvas */
 }
@@ -167,6 +167,153 @@ canvas {
     #navToggle .bars,
     #navToggle .caret { transition: none; }
 }
+
+/* ---- home page desktop: tray and windows --------------------------------- */
+
+/* The Game of Life overlay: above the rings, under the windows and the tray.
+   It takes clicks only while it is on. */
+canvas.fx-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+}
+canvas.fx-overlay.active { pointer-events: auto; }
+
+#tray {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5000;
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    height: 48px;
+    box-sizing: content-box;
+    padding: 0 max(8px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-left, 0px));
+    background: #2b2b2b;
+    border-top: 1px solid #3f3f3f;
+    font-family: 'Courier New', Courier, monospace;
+    transform: translateY(101%);
+    visibility: hidden;
+    transition: transform 220ms ease, visibility 0s linear 220ms;
+}
+
+#tray.show {
+    transform: translateY(0);
+    visibility: visible;
+    transition: transform 220ms ease;
+}
+
+.tray-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 14px;
+    border: 0;
+    background: transparent;
+    color: #e6e6e6;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tray-item svg { width: 22px; height: 22px; flex: none; }
+.tray-item:hover { background: #3a3a3a; }
+.tray-item:focus-visible { outline: 2px solid #ffc94d; outline-offset: -2px; }
+.tray-item.active { background: #404040; }
+
+/* The bar under an icon: its window is open, as on a desktop taskbar. */
+.tray-item.open::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 1px;
+    height: 2px;
+    background: #c10f0f;
+}
+
+@media (max-width: 640px) {
+    #tray { justify-content: space-around; }
+    .tray-item { padding: 0 12px; }
+    .tray-item span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+}
+
+.win {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    width: min(640px, calc(100vw - 24px));
+    height: min(440px, calc(100dvh - 84px));
+    background: #1b1b1b;
+    border: 1px solid #3f3f3f;
+    color: #d8d8d8;
+    font-family: 'Courier New', Courier, monospace;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+}
+
+.win[hidden] { display: none; }
+.win.focused { border-color: #6a6a6a; }
+.win.dragging { user-select: none; }
+
+.win-bar {
+    display: flex;
+    align-items: center;
+    flex: none;
+    height: 34px;
+    padding-left: 12px;
+    background: #2b2b2b;
+    cursor: move;
+    touch-action: none;
+    user-select: none;
+}
+
+.win.focused .win-bar { background: #383838; }
+.win-title { flex: 1; min-width: 0; font-size: 0.85rem; color: #ffffff; }
+
+.win-btn {
+    width: 44px;
+    height: 34px;
+    border: 0;
+    background: transparent;
+    color: #d8d8d8;
+    font: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.win-btn:hover { background: #4a4a4a; color: #ffffff; }
+.win-btn[data-act="close"]:hover { background: #c10f0f; }
+.win-btn:focus-visible { outline: 2px solid #ffc94d; outline-offset: -2px; }
+
+.win-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 18px 20px;
+    line-height: 1.6;
+}
+
+.win-body p { margin: 0 0 0.8rem; }
+.win-body a { color: #ffc94d; }
+.win-empty { color: #8a8a8a; }
 
 /* ---- content pages ------------------------------------------------------
    Sketches. Same black/monospace language as the landing page, no canvas. */
