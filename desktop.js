@@ -2,8 +2,13 @@
  * draggable window per page. Separate from main.js so navigation still works if
  * WebGL or the model fails.
  *
- * SKETCH: the window contents are placeholders until the page text is written.
+ * Client work and 3d come from windows-content.js, which is generated from the
+ * layout tool (op2/projects/2026job/site-windows/build_windows.py). A link with
+ * data-doc opens its page (laser.html, shaders.html, ...) in a pop-up window
+ * instead of going to it; without JavaScript it is an ordinary link.
  */
+
+import { BODIES } from './windows-content.js';
 
 const svg = (path) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
 
@@ -13,22 +18,31 @@ const PAGES = [
     {
         id: 'clientwork', title: 'client work',
         icon: svg('<rect x="3" y="7.5" width="18" height="12.5" rx="1.5"/><path d="M9 7.5V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5v2M3 13h18"/>'),
-        body: PLACEHOLDER,
+        body: BODIES.clientwork || PLACEHOLDER,
     },
     {
         id: '3d', title: '3d',
         icon: svg('<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>'),
-        body: PLACEHOLDER,
+        body: BODIES['3d'] || PLACEHOLDER,
     },
     {
         id: 'coding', title: 'coding',
         icon: svg('<path d="M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15"/>'),
-        body: PLACEHOLDER,
-    },
-    {
-        id: 'personal', title: 'personal work',
-        icon: svg('<path d="M4 20l1-4.5L16 4.5a2 2 0 0 1 3 0l.5.5a2 2 0 0 1 0 3L8.5 19z"/><path d="M14 6.5l3.5 3.5"/>'),
-        body: PLACEHOLDER,
+        body: `<p>ai driven coding projects</p>
+            <div class="win-links">
+                <a class="win-link" href="/laser.html" data-doc>
+                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794214422/follow_083203_05_n1_20261031_083225_p7_ivjbod.jpg" alt="">
+                    <span><b>Tracking to Laser</b>A camera finds people on a floor. TouchDesigner turns their positions into shapes, and a 10 W RGB laser draws them on the same floor.</span>
+                </a>
+                <a class="win-link" href="/houdini-comfyui.html" data-doc>
+                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794212457/pen_roundtrip_z23cdy.png" alt="">
+                    <span><b>Houdini and ComfyUI</b>Render a Houdini scene, change it with a diffusion model, put the result back on the scene, and render again.</span>
+                </a>
+                <a class="win-link" href="/shaders.html" data-doc>
+                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="">
+                    <span><b>Shader Studio</b>A GLSL environment where a person and Claude work on the same running shader.</span>
+                </a>
+            </div>`,
     },
     {
         id: 'about', title: 'about',
@@ -51,9 +65,10 @@ tray.setAttribute('aria-label', 'Pages');
 tray.inert = true;
 document.body.appendChild(tray);
 
-const wins = new Map();        // id -> { el, button, x, y, state }
+const wins = new Map();        // id -> { el, button, x, y, state, doc }
 let topZ = 100;
 let focusedId = null;
+let docCount = 0;
 
 const anyOpen = () => [...wins.values()].some((w) => w.state !== 'closed');
 
@@ -99,10 +114,12 @@ function clampPosition(w) {
 
 function refreshButtons() {
     for (const [id, w] of wins) {
+        const focused = id === focusedId && w.state === 'open';
+        w.el.classList.toggle('focused', focused);
+        if (!w.button) continue;
         w.button.classList.toggle('open', w.state !== 'closed');
-        w.button.classList.toggle('active', id === focusedId && w.state === 'open');
+        w.button.classList.toggle('active', focused);
         w.button.setAttribute('aria-pressed', w.state === 'open' ? 'true' : 'false');
-        w.el.classList.toggle('focused', id === focusedId && w.state === 'open');
     }
 }
 
@@ -124,17 +141,37 @@ function focusNext() {
     refreshButtons();
 }
 
-function openWin(id, index) {
+/* Images and videos carry data-src until their window first opens, so a closed
+ * window downloads nothing. */
+function loadMedia(root) {
+    root.querySelectorAll('[data-src]').forEach((m) => {
+        m.src = m.dataset.src;
+        m.removeAttribute('data-src');
+        if (m.tagName === 'VIDEO') m.play().catch(() => {});
+    });
+}
+
+function setVideosPlaying(w, on) {
+    w.el.querySelectorAll('video').forEach((v) => {
+        if (on && v.src) v.play().catch(() => {});
+        else v.pause();
+    });
+}
+
+function openWin(id, offsetIndex) {
     const w = wins.get(id);
-    const first = w.state === 'closed';
+    const first = w.state === 'closed' && !w.placed;
     w.state = 'open';
     w.el.hidden = false;
+    loadMedia(w.el);
+    setVideosPlaying(w, true);
     if (first) {
         const width = w.el.offsetWidth;
         const height = w.el.offsetHeight;
-        const offset = (index - (PAGES.length - 1) / 2) * CASCADE;
+        const offset = offsetIndex * CASCADE;
         w.x = (window.innerWidth - width) / 2 + offset;
         w.y = Math.max(12, (window.innerHeight - TRAY_H - height) / 2 + offset);
+        w.placed = true;
     }
     clampPosition(w);
     focusWin(id);
@@ -145,12 +182,13 @@ function hideWin(id, state) {
     const w = wins.get(id);
     w.state = state;
     w.el.hidden = true;
+    setVideosPlaying(w, false);
     if (focusedId === id) focusNext();
     refreshButtons();
     updateTray();
 }
 
-function makeDraggable(w, id, bar) {
+function makeDraggable(w, bar) {
     let drag = null;
 
     bar.addEventListener('pointerdown', (e) => {
@@ -170,6 +208,38 @@ function makeDraggable(w, id, bar) {
     bar.addEventListener('pointercancel', end);
 }
 
+/* One window element. A tray window has a tray button and can be minimized; a
+ * document pop-up has no button, so it only closes. */
+function createWin(id, title, body, { button = null, doc = false } = {}) {
+    const el = document.createElement('section');
+    el.className = doc ? 'win win-doc' : 'win';
+    el.hidden = true;
+    el.setAttribute('aria-label', title);
+    el.innerHTML = `
+        <header class="win-bar">
+            <span class="win-title"></span>
+            ${doc ? '' : '<button type="button" class="win-btn" data-act="min">_</button>'}
+            <button type="button" class="win-btn" data-act="close">&times;</button>
+        </header>
+        <div class="win-body${doc ? ' page' : ''}">${body}</div>`;
+    el.querySelector('.win-title').textContent = title;
+    el.querySelector('[data-act="close"]').setAttribute('aria-label', `Close ${title}`);
+    document.body.appendChild(el);
+
+    const w = { el, button, x: 0, y: 0, state: 'closed', doc, placed: false };
+    wins.set(id, w);
+
+    makeDraggable(w, el.querySelector('.win-bar'));
+    el.addEventListener('pointerdown', () => focusWin(id));
+    const min = el.querySelector('[data-act="min"]');
+    if (min) {
+        min.setAttribute('aria-label', `Minimize ${title}`);
+        min.addEventListener('click', () => hideWin(id, 'minimized'));
+    }
+    el.querySelector('[data-act="close"]').addEventListener('click', () => hideWin(id, 'closed'));
+    return w;
+}
+
 PAGES.forEach((page, index) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -177,33 +247,173 @@ PAGES.forEach((page, index) => {
     button.innerHTML = `${page.icon}<span>${page.title}</span>`;
     tray.appendChild(button);
 
-    const el = document.createElement('section');
-    el.className = 'win';
-    el.hidden = true;
-    el.setAttribute('aria-label', page.title);
-    el.innerHTML = `
-        <header class="win-bar">
-            <span class="win-title">${page.title}</span>
-            <button type="button" class="win-btn" data-act="min" aria-label="Minimize ${page.title}">_</button>
-            <button type="button" class="win-btn" data-act="close" aria-label="Close ${page.title}">&times;</button>
-        </header>
-        <div class="win-body">${page.body}</div>`;
-    document.body.appendChild(el);
-
-    const w = { el, button, x: 0, y: 0, state: 'closed' };
-    wins.set(page.id, w);
-
-    makeDraggable(w, page.id, el.querySelector('.win-bar'));
-    el.addEventListener('pointerdown', () => focusWin(page.id));
-    el.querySelector('[data-act="min"]').addEventListener('click', () => hideWin(page.id, 'minimized'));
-    el.querySelector('[data-act="close"]').addEventListener('click', () => hideWin(page.id, 'closed'));
+    const w = createWin(page.id, page.title, page.body, { button });
+    const offsetIndex = index - (PAGES.length - 1) / 2;
 
     // The same rules as a desktop taskbar: open it, bring it forward, or hide it.
     button.addEventListener('click', () => {
-        if (w.state !== 'open') openWin(page.id, index);
+        if (w.state !== 'open') openWin(page.id, offsetIndex);
         else if (focusedId === page.id) hideWin(page.id, 'minimized');
         else focusWin(page.id);
     });
+});
+
+/* ---- document pop-ups --------------------------------------------------
+ * The page is fetched and its <main> is shown in a window. Links between the
+ * documentation pages (for example the Houdini section links) open as pop-ups
+ * too. Image links (.tiles) still open the full image in a new tab. */
+
+function isDocLink(a) {
+    if (!a || a.target === '_blank' || a.hasAttribute('download')) return false;
+    const url = new URL(a.href, location.href);
+    return url.origin === location.origin && url.pathname.endsWith('.html');
+}
+
+async function loadDoc(w, path) {
+    const body = w.el.querySelector('.win-body');
+    try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const page = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const main = page.querySelector('main');
+        if (!main) throw new Error('no <main>');
+        main.querySelectorAll('.back').forEach((n) => n.remove());
+        // Lazy images in a scrolling window load as they come into view.
+        main.querySelectorAll('img').forEach((img) => { img.loading = 'lazy'; });
+        body.innerHTML = main.innerHTML;
+        const h1 = main.querySelector('h1');
+        if (h1) w.el.querySelector('.win-title').textContent = h1.textContent.trim();
+        body.scrollTop = 0;
+    } catch (err) {
+        console.warn('[doc] could not load', path, err);
+        body.innerHTML = `<p>This page did not load. <a href="${path}">Open it as a page</a>.</p>`;
+    }
+}
+
+function openDoc(path, title) {
+    const id = `doc:${path}`;
+    if (!wins.has(id)) {
+        const w = createWin(id, title || path, '<p class="win-empty">Loading&hellip;</p>', { doc: true });
+        loadDoc(w, path);
+    }
+    const w = wins.get(id);
+    if (w.state !== 'open') openWin(id, (docCount++ % 4) - 1.5);
+    else focusWin(id);
+}
+
+/* ---- media viewer ------------------------------------------------------
+ * A click on an image or video in a window shows it over the whole page: no
+ * window bar, one red close button at the top right. The caption (if the piece
+ * has one) slides up when the mouse comes near the bottom of the screen; on a
+ * touch screen a tap on the media shows or hides it. */
+
+const CAPTION_ZONE = 140;      // px from the bottom edge that bring the caption up
+
+const viewer = document.createElement('div');
+viewer.id = 'viewer';
+viewer.hidden = true;
+viewer.setAttribute('role', 'dialog');
+viewer.setAttribute('aria-modal', 'true');
+viewer.setAttribute('aria-label', 'Media viewer');
+viewer.innerHTML = `
+    <div class="viewer-stage"></div>
+    <button type="button" class="viewer-close" aria-label="Close">&times;</button>
+    <div class="viewer-cap"></div>`;
+document.body.appendChild(viewer);
+
+const vStage = viewer.querySelector('.viewer-stage');
+const vCap = viewer.querySelector('.viewer-cap');
+const vClose = viewer.querySelector('.viewer-close');
+let viewerReturn = null;
+
+/* Larger copies than the window uses. */
+const bigSrc = (src) => src
+    .replace('/image/upload/f_auto,q_auto,w_1200/', '/image/upload/f_auto,q_auto,w_2000/')
+    .replace('/image/upload/f_auto,q_auto,w_640/', '/image/upload/f_auto,q_auto,w_2000/')
+    .replace('/video/upload/q_auto:low,w_640/', '/video/upload/q_auto,w_1280/');
+
+function openViewer(media, caption) {
+    const src = media.currentSrc || media.src || media.dataset.src;
+    if (!src) return;
+    vStage.textContent = '';
+    let el;
+    if (media.tagName === 'VIDEO') {
+        el = document.createElement('video');
+        Object.assign(el, { muted: true, loop: true, playsInline: true, autoplay: true });
+        el.poster = '';
+        el.src = bigSrc(src);
+        // Fall back to the copy the window already loaded if the large one fails.
+        el.addEventListener('error', () => { if (el.src !== src) el.src = src; }, { once: true });
+    } else {
+        el = document.createElement('img');
+        el.alt = media.alt || '';
+        el.src = bigSrc(src);
+        el.addEventListener('error', () => { if (el.src !== src) el.src = src; }, { once: true });
+    }
+    vStage.appendChild(el);
+    vCap.innerHTML = caption || '';
+    viewer.classList.toggle('has-cap', !!caption);
+    viewer.classList.remove('cap-up');
+    viewerReturn = document.activeElement;
+    viewer.hidden = false;
+    document.documentElement.classList.add('viewer-open');
+    vClose.focus({ preventScroll: true });
+}
+
+function closeViewer() {
+    if (viewer.hidden) return;
+    viewer.hidden = true;
+    vStage.textContent = '';            // stops a video and frees it
+    document.documentElement.classList.remove('viewer-open');
+    if (viewerReturn && viewerReturn.focus) viewerReturn.focus({ preventScroll: true });
+    viewerReturn = null;
+}
+
+vClose.addEventListener('click', closeViewer);
+viewer.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || !viewer.classList.contains('has-cap')) return;
+    viewer.classList.toggle('cap-up', e.clientY > window.innerHeight - CAPTION_ZONE);
+});
+viewer.addEventListener('pointerleave', () => viewer.classList.remove('cap-up'));
+viewer.addEventListener('click', (e) => {
+    if (e.target.closest('.viewer-close') || e.target.closest('.viewer-cap')) return;
+    if (viewer.classList.contains('has-cap') && matchMedia('(hover: none)').matches) {
+        viewer.classList.toggle('cap-up');
+    }
+});
+// Capture phase, so Escape closes the viewer and not the window under it.
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !viewer.hidden) { e.stopImmediatePropagation(); closeViewer(); }
+}, true);
+
+/* Media in a window that opens the viewer: the client work and 3d pieces, the
+ * image tiles of the documentation pop-ups, and figures in those pages. */
+function viewerTarget(target) {
+    const body = target.closest('.win-body');
+    if (!body) return null;
+    const media = target.closest('.cw-media img, .cw-media video, .tiles a, .win-body.page figure img');
+    if (!media) return null;
+    const el = media.tagName === 'A' ? media.querySelector('img') : media;
+    if (!el) return null;
+    const cap = media.closest('figure')?.querySelector('figcaption');
+    return { el, caption: cap ? cap.innerHTML : '' };
+}
+
+document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const hit = viewerTarget(e.target);
+    if (hit) { e.preventDefault(); openViewer(hit.el, hit.caption); }
+});
+
+document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest('a');
+    if (!a || !a.closest('.win-body')) return;
+    if (!(a.hasAttribute('data-doc') || isDocLink(a))) return;
+    e.preventDefault();
+    const url = new URL(a.href, location.href);
+    const title = a.querySelector('b')?.textContent || a.textContent.trim();
+    openDoc(url.pathname, title);
 });
 
 window.addEventListener('scroll', updateTray, { passive: true });

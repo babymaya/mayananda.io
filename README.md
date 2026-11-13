@@ -13,7 +13,15 @@ Home page since 2026-11-10 (branch `fx/effects-layer`, not live yet):
   above the tray (`main.js`). The image and video wall and the top-right menu are
   gone from the home page.
 - At the bottom of the scroll a tray opens draggable windows for client work, 3d,
-  coding, personal work and about (`desktop.js`; content still placeholder).
+  coding and about (`desktop.js`). Client work and 3d come from
+  `windows-content.js`, which is GENERATED from the layout tool by
+  `op2/projects/2026job/site-windows/build_windows.py` (do not edit it by hand).
+  Media loads only when a window opens. About is still a placeholder.
+- The coding window lists 3 pages (laser, Houdini and ComfyUI, Shader Studio). A
+  click opens the page's `<main>` in a pop-up window; links between doc pages open
+  as pop-ups too. Without JavaScript they are ordinary links.
+- A click on an image or video in a window opens a full-page viewer: no bar, red
+  close button top right, the caption slides up when the mouse is near the bottom.
 - While the tray is up, `fx/overlay-life.js` draws a reaction-diffusion and Game of
   Life overlay over the rings; a click seeds it. Self-contained WebGL2, loaded only
   when first needed.
