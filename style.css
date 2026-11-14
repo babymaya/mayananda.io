@@ -997,3 +997,9 @@ html.viewer-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .viewer-cap { transition: none; }
 }
+
+/* Houdini section links. The pages set these in their own <style>; a pop-up
+   only takes <main>, so the rules are repeated here for .win-body.page. */
+.win-body.page .section-links { font-size: 0.85rem; margin: 0 0 2rem; }
+.win-body.page .section-links a { margin-right: 1.1rem; display: inline-block; }
+.win-body.page .section-links a[aria-current="page"] { color: #ffffff; text-decoration: none; }

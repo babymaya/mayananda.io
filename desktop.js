@@ -34,9 +34,9 @@ const PAGES = [
                     <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794214422/follow_083203_05_n1_20261031_083225_p7_ivjbod.jpg" alt="">
                     <span><b>Tracking to Laser</b>A camera finds people on a floor. TouchDesigner turns their positions into shapes, and a 10 W RGB laser draws them on the same floor.</span>
                 </a>
-                <a class="win-link" href="/houdini-comfyui.html" data-doc>
+                <a class="win-link" href="/houdini.html" data-doc>
                     <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794212457/pen_roundtrip_z23cdy.png" alt="">
-                    <span><b>Houdini and ComfyUI</b>Render a Houdini scene, change it with a diffusion model, put the result back on the scene, and render again.</span>
+                    <span><b>Houdini</b>Tools that connect Houdini to AI models, render jobs, and 3D printing: AI inside Houdini, Houdini and ComfyUI, rendering and cataloguing, Houdini to Bambu Studio.</span>
                 </a>
                 <a class="win-link" href="/shaders.html" data-doc>
                     <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="">
@@ -413,6 +413,11 @@ document.addEventListener('click', (e) => {
     e.preventDefault();
     const url = new URL(a.href, location.href);
     const title = a.querySelector('b')?.textContent || a.textContent.trim();
+    // A link inside a pop-up (for example the Houdini section links) changes the
+    // page in that same window; a link anywhere else opens a pop-up.
+    const docWin = a.closest('.win-doc');
+    const w = docWin && [...wins.values()].find((x) => x.el === docWin);
+    if (w) { loadDoc(w, url.pathname); focusWin([...wins].find(([, x]) => x === w)[0]); return; }
     openDoc(url.pathname, title);
 });
 

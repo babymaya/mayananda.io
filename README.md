@@ -17,9 +17,10 @@ Home page since 2026-11-10 (branch `fx/effects-layer`, not live yet):
   `windows-content.js`, which is GENERATED from the layout tool by
   `op2/projects/2026job/site-windows/build_windows.py` (do not edit it by hand).
   Media loads only when a window opens. About is still a placeholder.
-- The coding window lists 3 pages (laser, Houdini and ComfyUI, Shader Studio). A
-  click opens the page's `<main>` in a pop-up window; links between doc pages open
-  as pop-ups too. Without JavaScript they are ordinary links.
+- The coding window lists 3 pages (laser, Houdini, Shader Studio). A click opens the
+  page's `<main>` in a pop-up window. A doc link inside a pop-up (for example the
+  Houdini section links) changes the page in the same pop-up. Without JavaScript they
+  are ordinary links.
 - A click on an image or video in a window opens a full-page viewer: no bar, red
   close button top right, the caption slides up when the mouse is near the bottom.
 - While the tray is up, `fx/overlay-life.js` draws a reaction-diffusion and Game of
