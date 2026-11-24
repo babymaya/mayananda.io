@@ -1,0 +1,72 @@
+        <h1>후디니와 ComfyUI</h1>
+        <p class="lede">후디니 씬을 렌더하고, 디퓨전 모델로 이미지를 바꾸고, 그 결과를 씬에 다시 입혀 한 번 더 렌더하는 체인.</p>
+        <p class="section-links"><a href="/houdini.html">개요</a>
+            <a href="/houdini-ai.html">후디니 속 AI</a>
+            <a href="/houdini-comfyui.html" aria-current="page">후디니와 ComfyUI</a>
+            <a href="/houdini-render.html">렌더링과 카탈로그</a>
+            <a href="/houdini-print.html">후디니에서 Bambu Studio로</a></p>
+
+        {{TILES}}
+
+        <h2>체인</h2>
+        <p>ComfyUI는 오픈 소스 도구입니다. 제 작업은 그 주변의 체인입니다. Python 호출 한 번으로
+        모든 단계를 실행하며, 후디니 안에 추가 라이브러리가 필요 없습니다.</p>
+{{PRE}}
+        <table>
+            <thead><tr><th>첫 전체 실행, 정물 테스트 씬</th><th>시간</th></tr></thead>
+            <tbody>
+            <tr><td>뷰티 렌더</td><td>94.0 s</td></tr>
+            <tr><td>ComfyUI</td><td>15.5 s</td></tr>
+            <tr><td>프로젝션과 두 번째 렌더</td><td>62.0 s</td></tr>
+            <tr><td><strong>합계</strong></td><td><strong>171.6 s</strong></td></tr>
+            </tbody>
+        </table>
+
+        <h2>돔 테스트: 디테일을 다시 USD로</h2>
+        <p>유리 돔 안에 볼륨 구름이 있는 기존 Karma 씬으로 테스트했습니다.</p>
+        <ol>
+            <li>USD 레이어로 구름과 유리의 마스크를 따로 만듭니다.</li>
+            <li>ComfyUI가 마스크 영역마다 따로, 구름을 먼저 그다음 유리를 바꿉니다.</li>
+            <li>구름의 변화로 VDB 밀도를 조절합니다.</li>
+            <li>유리의 변화는 카메라 프로젝션 이미션 텍스처가 됩니다.</li>
+            <li>Karma가 씬을 다시 렌더합니다.</li>
+        </ol>
+        <table>
+            <thead><tr><th>뷰</th><th>구름 최대 밀도</th><th>평균 픽셀 변화</th></tr></thead>
+            <tbody>
+            <tr><td>돔 바깥, 두 번째 시도</td><td>2.88 → 4.48</td><td>0.0072</td></tr>
+            <tr><td>유리 안쪽</td><td>2.88 → 12.89</td><td>0.029</td></tr>
+            </tbody>
+        </table>
+        <p>안쪽 뷰는 640 x 360, 샘플 8 + 8로 첫 렌더에 75분, 두 번째 렌더에 79분이
+        걸렸습니다. 노이즈가 많은 유리가 이후 모든 단계로 넘어갑니다. 더 긴 렌더는 너무 느려서
+        ComfyUI로 정리하는 방법을 테스트했습니다. 디노이즈 0.22에서 패널이 유지되고 새로운
+        오브젝트가 생기지 않았습니다. <strong>이 테스트는 끝나지 않았습니다.</strong></p>
+
+        <h2>원격 렌더 노드</h2>
+        <p>노트북에서 만든 씬을 암호화 전송으로 데스크톱에 보내고, 체크섬으로 복사를
+        확인합니다. 그다음 데스크톱이 SSH를 통해 인터페이스 없이 렌더하고 ComfyUI를
+        실행합니다.</p>
+        <table>
+            <thead><tr><th>데스크톱 작업</th><th>결과</th></tr></thead>
+            <tbody>
+            <tr><td>Copernicus 씬, 1024 x 1024 240프레임</td><td>42.1 s</td></tr>
+            <tr><td>Copernicus 씬, 512 x 512 1프레임</td><td>18.7 s</td></tr>
+            <tr><td>이미지 투 이미지 변형 5개, DreamShaper 8</td><td>각 4.0~11.3 s</td></tr>
+            </tbody>
+        </table>
+
+        <h2>배운 점</h2>
+        <ul>
+            <li>프로젝션은 첫 카메라가 보는 면만 덮고, 가려짐을 확인하지 않습니다. 그래서 뒤쪽
+            벽에 오브젝트의 잔상이 나타날 수 있습니다.</li>
+            <li>이미션은 빛을 더하기만 하므로, ComfyUI가 어둡게 만든 부분은 사라집니다.</li>
+            <li>모델이 씬 자체를 바꿔버릴 수 있습니다. 디노이즈 0.55 이상에서는 변형 5개 중 3개가
+            하늘을 방 벽으로 바꿨습니다.</li>
+            <li>작고 둥근 마스크는 행성을 불러옵니다. 구름 디노이즈를 0.4 이하로 하고, 네거티브
+            프롬프트에 둥근 물체를 적어 이를 막았습니다.</li>
+            <li>투명한 픽셀은 ComfyUI에서 검은색으로 읽히므로, 체인이 먼저 렌더를 평평한 회색
+            위에 놓습니다.</li>
+        </ul>
+
+        <a class="back" href="/houdini.html">&larr; 돌아가기</a>

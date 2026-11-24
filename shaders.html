@@ -120,6 +120,99 @@
         <a class="back" href="/">&larr; back</a>
     </main>
 
+    <!-- ko:start -->
+    <main lang="ko" hidden>
+        <h1>셰이더 스튜디오</h1>
+        <p class="lede">사람과 Claude가 실행 중인 같은 셰이더를 함께 작업하는 GLSL 환경입니다.
+        하나의 렌더러가 라이브 창과 헤드리스 캡처를 함께 구동하므로, Claude가 읽는 이미지가 곧
+        사용자가 보는 이미지입니다.</p>
+
+        <figure><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_1200/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="Shader Studio, image 1 of 1" loading="lazy" decoding="async"></figure>
+
+        <h2>상태</h2>
+        <p>렌더러, 캡처 도구, 코드 패널, 채팅 패널, 채팅 브리지를 만들었습니다. 각 부분은 따로
+        테스트했습니다. 채팅 메시지 하나로 Claude가 실행 중인 셰이더를 수정하는 완전한 라이브
+        흐름은 아직 실행하지 않았습니다. 편집 충돌을 처리하는 잠금 기능은 아직 만들지
+        않았습니다.</p>
+
+        <h2>하나의 렌더러, 두 개의 출력</h2>
+<pre>
+ GLSL shader file
+   |
+   v
+ Shared renderer (OpenGL 3.3 core)
+   |                     |
+   v                     v
+ Live window         Headless capture
+ reloads on save     writes PNG frames
+                         |
+                         v
+                     Claude reads them
+</pre>
+        <ul>
+            <li><strong>같은 픽셀.</strong> 같은 해상도에서 캡처는 라이브 창과 일치합니다. 그래서
+            이미지를 말로 설명할 필요가 없습니다.</li>
+            <li><strong>셰이더 형식.</strong> 셰이더는 Shadertoy 방식의 main 함수 하나입니다.
+            셰이더 안의 주석 한 줄로 입력 이미지를 연결합니다.</li>
+            <li><strong>피드백.</strong> 셰이더는 float 버퍼에서 이전 프레임을 읽을 수 있습니다.
+            Game of Life 데모로 이를 테스트합니다.</li>
+            <li><strong>캡처.</strong> 원하는 시점의 프레임을 찍거나, 시뮬레이션을 단계별로
+            진행하며 컨택트 시트를 만들 수 있습니다.</li>
+        </ul>
+
+        <h2>스튜디오 모드</h2>
+<pre>
+ Code panel (left)      Chat panel (right)
+       |                       |
+       | save                  | message file
+       v                       v
+ Shader file  &lt;-- edit --  Chat bridge &gt; Claude CLI
+       |                       |
+       v                       | reply file
+ Live shader background  &lt;-----+
+</pre>
+        <ul>
+            <li><strong>오버레이.</strong> 반투명 패널이 전체 화면 셰이더 위에 놓입니다.
+            외곽선이 있는 글자는 밝은 이미지 위에서도 읽히고, 키 하나로 배경을 어둡게 할 수
+            있습니다.</li>
+            <li><strong>코드 패널.</strong> 패널은 셰이더 파일을 그대로 보여주고 바뀐 줄을
+            강조합니다. 편집 모드는 같은 핫 리로드 경로로 저장합니다.</li>
+            <li><strong>채팅 브리지.</strong> 추가만 가능한 파일 두 개가 메시지를 나르고, 각
+            파일에는 쓰는 쪽이 하나뿐입니다. 로컬 Claude CLI만 모델을 호출하므로, 애플리케이션은
+            API를 호출하지 않습니다.</li>
+            <li><strong>두 개의 프로그램.</strong> 인터페이스 라이브러리에 자체 GLFW가 들어 있어
+            라이브 창의 GLFW와 함께 링크할 수 없습니다. 그래서 스튜디오는 별도의 프로그램이고, 두
+            프로그램이 렌더러를 공유합니다.</li>
+        </ul>
+
+        <h2>테스트</h2>
+        <table>
+            <thead><tr><th>검사</th><th>결과</th></tr></thead>
+            <tbody>
+            <tr><td>프로젝트 빌드와 vet</td><td>통과, 2026-11-09</td></tr>
+            <tr><td>채팅 브리지: 테스트 10개, 레이스 검출기, 20회 반복</td><td>통과, 2026-10-08</td></tr>
+            <tr><td>오버레이, 코드 패널, 편집 모드, 눈으로 확인</td><td>통과, 2026-07-07</td></tr>
+            <tr><td>채팅 패널 입력</td><td>통과, 수동 답장으로, 2026-07-08</td></tr>
+            </tbody>
+        </table>
+
+        <h2>사용한 하드웨어와 소프트웨어</h2>
+        <table>
+            <thead><tr><th>항목</th><th>내용</th></tr></thead>
+            <tbody>
+            <tr><td>언어</td><td>Go (cgo), GLSL</td></tr>
+            <tr><td>그래픽</td><td>OpenGL 3.3 core, GLFW, Dear ImGui</td></tr>
+            <tr><td>모델 접근</td><td>Claude Code CLI</td></tr>
+            <tr><td>컴퓨터</td><td>Windows 노트북, RTX 3050 4 GB</td></tr>
+            </tbody>
+        </table>
+
+        <a class="back" href="/">&larr; 돌아가기</a>
+    </main>
+    <!-- ko:end -->
+
+    
+
     <footer>
         <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
         <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>

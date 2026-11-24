@@ -14,6 +14,15 @@ const svg = (path) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" s
 
 const PLACEHOLDER = '<p class="win-empty">Content to come.</p>';
 
+/* EN/KR. The coding window holds both languages (data-l spans, CSS hides one).
+ * A documentation page holds a second <main lang="ko">, written by
+ * scripts/i18n-ko.py; a pop-up shows the <main> of the chosen language. The
+ * choice is remembered in this browser only. */
+let lang = 'en';
+try { if (localStorage.getItem('site-lang') === 'ko') lang = 'ko'; } catch { /* storage blocked */ }
+document.documentElement.dataset.lang = lang;
+const both = (en, ko) => `<span data-l="en">${en}</span><span data-l="ko" lang="ko">${ko}</span>`;
+
 const PAGES = [
     {
         id: 'clientwork', title: 'client work',
@@ -28,23 +37,24 @@ const PAGES = [
     {
         id: 'coding', title: 'coding',
         icon: svg('<path d="M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15"/>'),
-        body: `<p class="code-intro">ai driven coding projects</p>
+        lang: true,
+        body: `<p class="code-intro">${both('ai driven coding projects', 'AI 기반 코딩 프로젝트')}</p>
             <div class="code-grid">
                 <a class="code-cell" href="/houdini.html" data-doc>
                     <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212457/pen_roundtrip_z23cdy.png" alt="">
-                    <b>Houdini</b>
+                    <b>${both('Houdini', '후디니')}</b>
                 </a>
                 <a class="code-cell" href="/games.html" data-doc>
                     <img data-src="/media/games/rings/TAO_04_chains_lit.webp" alt="">
-                    <b>Games</b>
+                    <b>${both('Games', '게임')}</b>
                 </a>
                 <a class="code-cell" href="/laser.html" data-doc>
                     <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794214422/follow_083203_05_n1_20261031_083225_p7_ivjbod.jpg" alt="">
-                    <b>Tracking to Laser</b>
+                    <b>${both('Tracking to Laser', '트래킹 투 레이저')}</b>
                 </a>
                 <a class="code-cell" href="/shaders.html" data-doc>
                     <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="">
-                    <b>Shader Studio</b>
+                    <b>${both('Shader Studio', '셰이더 스튜디오')}</b>
                 </a>
             </div>`,
     },
@@ -214,7 +224,7 @@ function makeDraggable(w, bar) {
 
 /* One window element. A tray window has a tray button and can be minimized; a
  * document pop-up has no button, so it only closes. */
-function createWin(id, title, body, { button = null, doc = false } = {}) {
+function createWin(id, title, body, { button = null, doc = false, langBtn = false } = {}) {
     const el = document.createElement('section');
     el.className = doc ? 'win win-doc' : 'win';
     el.hidden = true;
@@ -222,6 +232,7 @@ function createWin(id, title, body, { button = null, doc = false } = {}) {
     el.innerHTML = `
         <header class="win-bar">
             <span class="win-title"></span>
+            ${langBtn ? '<button type="button" class="win-btn win-lang" data-act="lang" aria-label="Language: English or Korean"><span data-show="en">EN</span>/<span data-show="ko">KR</span></button>' : ''}
             ${doc ? '' : '<button type="button" class="win-btn" data-act="min">_</button>'}
             <button type="button" class="win-btn" data-act="close">&times;</button>
         </header>
@@ -241,6 +252,7 @@ function createWin(id, title, body, { button = null, doc = false } = {}) {
         min.addEventListener('click', () => hideWin(id, 'minimized'));
     }
     el.querySelector('[data-act="close"]').addEventListener('click', () => hideWin(id, 'closed'));
+    el.querySelector('[data-act="lang"]')?.addEventListener('click', () => setLang(lang === 'en' ? 'ko' : 'en'));
     return w;
 }
 
@@ -251,7 +263,7 @@ PAGES.forEach((page, index) => {
     button.innerHTML = `${page.icon}<span>${page.title}</span>`;
     tray.appendChild(button);
 
-    const w = createWin(page.id, page.title, page.body, { button });
+    const w = createWin(page.id, page.title, page.body, { button, langBtn: !!page.lang });
     const offsetIndex = index - (PAGES.length - 1) / 2;
 
     // The same rules as a desktop taskbar: open it, bring it forward, or hide it.
@@ -273,14 +285,26 @@ function isDocLink(a) {
     return url.origin === location.origin && url.pathname.endsWith('.html');
 }
 
+function setLang(next) {
+    lang = next;
+    document.documentElement.dataset.lang = lang;
+    try { localStorage.setItem('site-lang', lang); } catch { /* storage blocked */ }
+    // Open pop-ups load their page again in the new language.
+    for (const w of wins.values()) if (w.doc && w.path) loadDoc(w, w.path);
+}
+
 async function loadDoc(w, path) {
+    w.path = path;
     const body = w.el.querySelector('.win-body');
     try {
-        const res = await fetch(path);
+        // no-cache: always check the server, so an edited page never shows from an old copy.
+        const res = await fetch(path, { cache: 'no-cache' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const page = new DOMParser().parseFromString(await res.text(), 'text/html');
-        const main = page.querySelector('main');
+        const main = (lang === 'ko' && page.querySelector('main[lang="ko"]'))
+            || page.querySelector('main:not([lang="ko"])') || page.querySelector('main');
         if (!main) throw new Error('no <main>');
+        body.lang = main.lang === 'ko' ? 'ko' : 'en';
         main.querySelectorAll('.back').forEach((n) => n.remove());
         // Lazy images in a scrolling window load as they come into view.
         main.querySelectorAll('img').forEach((img) => { img.loading = 'lazy'; });
@@ -297,7 +321,7 @@ async function loadDoc(w, path) {
 function openDoc(path, title) {
     const id = `doc:${path}`;
     if (!wins.has(id)) {
-        const w = createWin(id, title || path, '<p class="win-empty">Loading&hellip;</p>', { doc: true });
+        const w = createWin(id, title || path, '<p class="win-empty">Loading&hellip;</p>', { doc: true, langBtn: true });
         loadDoc(w, path);
     }
     const w = wins.get(id);
@@ -433,7 +457,8 @@ document.addEventListener('click', (e) => {
     if (!(a.hasAttribute('data-doc') || isDocLink(a))) return;
     e.preventDefault();
     const url = new URL(a.href, location.href);
-    const title = a.querySelector('b')?.textContent || a.textContent.trim();
+    const title = a.querySelector(`b [data-l="${lang}"]`)?.textContent
+        || a.querySelector('b')?.textContent || a.textContent.trim();
     // A link inside a pop-up (for example the Houdini section links) changes the
     // page in that same window; a link anywhere else opens a pop-up.
     const docWin = a.closest('.win-doc');
