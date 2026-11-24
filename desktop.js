@@ -28,27 +28,31 @@ const PAGES = [
     {
         id: 'coding', title: 'coding',
         icon: svg('<path d="M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5M13.5 4.5l-3 15"/>'),
-        body: `<p>ai driven coding projects</p>
-            <div class="win-links">
-                <a class="win-link" href="/laser.html" data-doc>
-                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794214422/follow_083203_05_n1_20261031_083225_p7_ivjbod.jpg" alt="">
-                    <span><b>Tracking to Laser</b>A camera finds people on a floor. TouchDesigner turns their positions into shapes, and a 10 W RGB laser draws them on the same floor.</span>
+        body: `<p class="code-intro">ai driven coding projects</p>
+            <div class="code-grid">
+                <a class="code-cell" href="/houdini.html" data-doc>
+                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212457/pen_roundtrip_z23cdy.png" alt="">
+                    <b>Houdini</b>
                 </a>
-                <a class="win-link" href="/houdini.html" data-doc>
-                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794212457/pen_roundtrip_z23cdy.png" alt="">
-                    <span><b>Houdini</b>Tools that connect Houdini to AI models, render jobs, and 3D printing: AI inside Houdini, Houdini and ComfyUI, rendering and cataloguing, Houdini to Bambu Studio.</span>
+                <a class="code-cell" href="/games.html" data-doc>
+                    <img data-src="/media/games/rings/TAO_04_chains_lit.webp" alt="">
+                    <b>Games</b>
                 </a>
-                <a class="win-link" href="/shaders.html" data-doc>
-                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_320/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="">
-                    <span><b>Shader Studio</b>A GLSL environment where a person and Claude work on the same running shader.</span>
+                <a class="code-cell" href="/laser.html" data-doc>
+                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794214422/follow_083203_05_n1_20261031_083225_p7_ivjbod.jpg" alt="">
+                    <b>Tracking to Laser</b>
+                </a>
+                <a class="code-cell" href="/shaders.html" data-doc>
+                    <img data-src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="">
+                    <b>Shader Studio</b>
                 </a>
             </div>`,
     },
     {
         id: 'about', title: 'about',
         icon: svg('<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6s6.500 2 7.500 6"/>'),
-        body: `${PLACEHOLDER}
-            <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        body: `${BODIES.about || PLACEHOLDER}
+            <p class="about-contact">email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
             <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>`,
     },
 ];
@@ -341,12 +345,14 @@ function openViewer(media, caption) {
         el = document.createElement('video');
         Object.assign(el, { muted: true, loop: true, playsInline: true, autoplay: true });
         el.poster = '';
+        el.crossOrigin = 'anonymous';   // the overlay reads its last frame (imprint)
         el.src = bigSrc(src);
         // Fall back to the copy the window already loaded if the large one fails.
         el.addEventListener('error', () => { if (el.src !== src) el.src = src; }, { once: true });
     } else {
         el = document.createElement('img');
         el.alt = media.alt || '';
+        el.crossOrigin = 'anonymous';   // the overlay reads its pixels (imprint)
         el.src = bigSrc(src);
         el.addEventListener('error', () => { if (el.src !== src) el.src = src; }, { once: true });
     }
@@ -360,8 +366,23 @@ function openViewer(media, caption) {
     vClose.focus({ preventScroll: true });
 }
 
+/* The box the picture fills inside its element (object-fit: contain), css px. */
+function pictureRect(el) {
+    const r = el.getBoundingClientRect();
+    const nw = el.naturalWidth || el.videoWidth, nh = el.naturalHeight || el.videoHeight;
+    if (!nw || !nh || !r.width || !r.height) return null;
+    const s = Math.min(r.width / nw, r.height / nh);
+    const w = nw * s, h = nh * s;
+    return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w, height: h };
+}
+
 function closeViewer() {
     if (viewer.hidden) return;
+    // Imprint the picture (a video: the frame on screen now) on the life pattern,
+    // where it was shown. Measured before the viewer hides.
+    const media = vStage.firstElementChild;
+    const ready = media && (media.tagName === 'VIDEO' ? media.readyState >= 2 : media.complete);
+    if (overlay && ready) overlay.imprint(media, pictureRect(media));
     viewer.hidden = true;
     vStage.textContent = '';            // stops a video and frees it
     document.documentElement.classList.remove('viewer-open');

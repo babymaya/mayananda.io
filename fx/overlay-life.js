@@ -7,6 +7,12 @@
  *          age, and fades when its lifetime runs out.
  *   life   Game of Life on a coarser grid, 3 steps per second. R = cell, G = trail.
  *   draw   Solid cells with a small gap; dead-cell trails as a small halftone.
+ *   imprint  When the media viewer closes, desktop.js calls imprint() with the
+ *          image (or the video's last frame) and where it was on screen. Each
+ *          life cell takes the brightness there: an ordered (Bayer 4x4) halftone
+ *          decides which cells live, and the trail channel takes the brightness,
+ *          so the fine trail halftone shows the grey tones. Then the normal
+ *          rules run on it: the picture seeds the life pattern.
  *
  * How they meet, over each pattern's life:
  *   - while young (KILL_END), the pattern clears all life in its area;
@@ -46,6 +52,9 @@ const LIFE_START = 0.12;     // live share at the start
 const CAP_SOFT = 5;          // die-off starts this many % below MAX_RED
 const CAP_DEATH = 0.15;      // die-off chance per step at MAX_RED
 const FADE_SECONDS = 0.6;    // overlay fade in and out
+const IMPRINT_HOLD = 4000;   // ms after an imprint with no red-cap die-off
+// Bayer 4x4 thresholds for the imprint halftone, 0..1.
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
 const LEVEL = 1.0;           // overall overlay strength
 const BASE = 0.5;            // brightness away from the mouse
 const SPOT_PX = 160;         // radius (css px) of the full-brightness area around the mouse
@@ -299,8 +308,8 @@ export function createOverlay() {
     }
 
     // Background and red cap, from the measured life share twice per second.
-    let spawnP = 0, capDeath = 0, nextMeasure = 0;
-    function measure() {
+    let spawnP = 0, capDeath = 0, nextMeasure = 0, capHoldUntil = 0;
+    function measure(now) {
         const [w, h] = life.grid;
         const buf = new Uint8Array(w * h * 4);
         gl.bindFramebuffer(gl.FRAMEBUFFER, life.a[life.src].fb);
@@ -314,6 +323,8 @@ export function createOverlay() {
         spawnP = 0.0015 * Math.max(0, S.bg - liveShare) / Math.max(S.bg, 0.01);
         const soft = S.maxRed - CAP_SOFT;
         capDeath = CAP_DEATH * Math.min(1, Math.max(0, (redShare - soft) / CAP_SOFT));
+        // A fresh imprint is far above the red cap; let it run before the die-off.
+        if (now < capHoldUntil) capDeath = 0;
     }
 
     // Mouse position in css px from the top left; null = no mouse over the page.
@@ -325,12 +336,15 @@ export function createOverlay() {
     }, { passive: true });
     document.documentElement.addEventListener('pointerleave', () => { mouse = null; });
 
+    /* Every click seeds the pattern while the overlay is on, also a click on a
+     * window, the tray or a title bar (windows sit above the canvas). Capture
+     * phase on window, so a handler that stops the event cannot hide it. */
     let seed = null;
-    canvas.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0) return;
+    window.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || !active) return;
         const r = canvas.getBoundingClientRect();
         seed = [(e.clientX - r.left) / r.width, 1 - (e.clientY - r.top) / r.height];
-    });
+    }, { capture: true, passive: true });
 
     const heatDecay = Math.pow(0.02, LIFE_TICK / S.trail);
     let simTime = 0, lifeAcc = 0;
@@ -388,7 +402,7 @@ export function createOverlay() {
 
         simTime += dt;
         lifeAcc += dt;
-        if (now > nextMeasure) { nextMeasure = now + 500; measure(); }
+        if (now > nextMeasure) { nextMeasure = now + 500; measure(now); }
         if (lifeAcc >= LIFE_TICK) { lifeAcc = Math.min(lifeAcc - LIFE_TICK, LIFE_TICK); lifePass(1); }
         lifePass(0);
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -437,8 +451,65 @@ export function createOverlay() {
         else { raf = 0; gl.clear(gl.COLOR_BUFFER_BIT); }
     }
 
+    /* Stamp media (img or video, drawable, same origin or CORS) into the life
+     * grid. rect = where its picture was, css px from the viewport's top left.
+     * Returns false when nothing was stamped. */
+    const scratch = document.createElement('canvas');
+    function imprint(media, rect) {
+        if (!active || !rect || rect.width < 1 || rect.height < 1) return false;
+        fit();
+        const r = canvas.getBoundingClientRect();
+        const [gw, gh] = life.grid;
+        const sx = gw / r.width, sy = gh / r.height;
+        // Cells covered, columns from the left and rows from the top.
+        const c0 = Math.max(0, Math.floor((rect.left - r.left) * sx));
+        const c1 = Math.min(gw, Math.ceil((rect.left + rect.width - r.left) * sx));
+        const t0 = Math.max(0, Math.floor((rect.top - r.top) * sy));
+        const t1 = Math.min(gh, Math.ceil((rect.top + rect.height - r.top) * sy));
+        const w = c1 - c0, h = t1 - t0;
+        if (w < 1 || h < 1) return false;
+
+        scratch.width = w;
+        scratch.height = h;
+        const ctx = scratch.getContext('2d', { willReadFrequently: true });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, w, h);
+        let px;
+        try {
+            ctx.drawImage(media, (rect.left - r.left) * sx - c0, (rect.top - r.top) * sy - t0,
+                rect.width * sx, rect.height * sy);
+            px = ctx.getImageData(0, 0, w, h).data;
+        } catch (err) {
+            console.warn('[overlay] imprint skipped:', err.message);
+            return false;
+        }
+
+        // Texture rows go from the bottom; canvas rows from the top.
+        const out = new Uint8Array(w * h * 4);
+        for (let j = 0; j < h; j++) {
+            const k = h - 1 - j;
+            for (let i = 0; i < w; i++) {
+                const p = (j * w + i) * 4, o = (k * w + i) * 4;
+                const lum = (0.2126 * px[p] + 0.7152 * px[p + 1] + 0.0722 * px[p + 2]) / 255;
+                const live = lum > BAYER4[((t0 + j) & 3) * 4 + ((c0 + i) & 3)] ? 255 : 0;
+                out[o] = live;
+                out[o + 1] = Math.max(live, Math.round(lum * 255));
+                out[o + 3] = 255;
+            }
+        }
+        gl.bindTexture(gl.TEXTURE_2D, life.a[life.src].t);
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, c0, gh - t1, w, h, gl.RGBA, gl.UNSIGNED_BYTE, out);
+        capHoldUntil = performance.now() + IMPRINT_HOLD;
+        capDeath = 0;
+        return true;
+    }
+
     fit();
     return {
+        imprint,
         setActive(on) {
             active = on;
             canvas.classList.toggle('active', on);
