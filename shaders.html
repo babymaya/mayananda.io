@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Shader Studio — Mayananda</title>
+    <meta name="description" content="A GLSL environment where a person and Claude work on the same running shader." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+    <style>
+        .page tbody td:first-child { white-space: normal; }
+        .page ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+    </style>
+  <link rel="stylesheet" crossorigin href="/assets/style-iZ5Nrewb.css">
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/ai.html">AI</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Shader Studio</h1>
+        <p class="lede">A GLSL environment where a person and Claude work on the same running
+        shader. One renderer drives a live window and a headless capture, so the image that
+        Claude reads is the image that you see.</p>
+
+        <figure><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_1200/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="Shader Studio, image 1 of 1" loading="lazy" decoding="async"></figure>
+
+        <h2>Status</h2>
+        <p>I built the renderer, the capture tool, the code panel, the chat panel, and the chat
+        bridge. Each part was tested on its own. A full live turn, where a chat message makes
+        Claude edit the running shader, has not been run. The lock that handles edit conflicts
+        is not built.</p>
+
+        <h2>One renderer, two outputs</h2>
+<pre>
+ GLSL shader file
+   |
+   v
+ Shared renderer (OpenGL 3.3 core)
+   |                     |
+   v                     v
+ Live window         Headless capture
+ reloads on save     writes PNG frames
+                         |
+                         v
+                     Claude reads them
+</pre>
+        <ul>
+            <li><strong>Same pixels.</strong> At the same resolution, a capture matches the live
+            window. This removes the need to describe an image in words.</li>
+            <li><strong>Shader format.</strong> A shader is one Shadertoy-style main function.
+            A comment line in the shader connects an input image.</li>
+            <li><strong>Feedback.</strong> A shader can read its previous frame from a float
+            buffer. A Game of Life demo tests this.</li>
+            <li><strong>Capture.</strong> A capture can take frames at chosen times, or step a
+            simulation and write a contact sheet.</li>
+        </ul>
+
+        <h2>Studio mode</h2>
+<pre>
+ Code panel (left)      Chat panel (right)
+       |                       |
+       | save                  | message file
+       v                       v
+ Shader file  &lt;-- edit --  Chat bridge &gt; Claude CLI
+       |                       |
+       v                       | reply file
+ Live shader background  &lt;-----+
+</pre>
+        <ul>
+            <li><strong>Overlay.</strong> Translucent panels sit over the fullscreen shader.
+            Outlined text stays readable over a bright image, and one key dims the
+            background.</li>
+            <li><strong>Code panel.</strong> The panel mirrors the shader file and highlights
+            changed lines. Edit mode saves through the same hot-reload path.</li>
+            <li><strong>Chat bridge.</strong> Two append-only files carry the messages, and each
+            file has one writer. The local Claude CLI is the only model caller, so the
+            application makes no API calls.</li>
+            <li><strong>Two programs.</strong> The interface library includes its own GLFW, which
+            cannot link with the GLFW of the live window. The studio is therefore a separate
+            program, and both programs share the renderer.</li>
+        </ul>
+
+        <h2>Tests</h2>
+        <table>
+            <thead><tr><th>Check</th><th>Result</th></tr></thead>
+            <tbody>
+            <tr><td>Project build and vet</td><td>Passed, 2026-11-09</td></tr>
+            <tr><td>Chat bridge: 10 tests, race detector, 20 repeats</td><td>Passed, 2026-10-08</td></tr>
+            <tr><td>Overlay, code panel, and edit mode, checked by eye</td><td>Passed, 2026-07-07</td></tr>
+            <tr><td>Typing in the chat panel</td><td>Passed, with a manual reply, 2026-07-08</td></tr>
+            </tbody>
+        </table>
+
+        <h2>Hardware and software used</h2>
+        <table>
+            <thead><tr><th>Item</th><th>Value</th></tr></thead>
+            <tbody>
+            <tr><td>Languages</td><td>Go with cgo, GLSL</td></tr>
+            <tr><td>Graphics</td><td>OpenGL 3.3 core, GLFW, Dear ImGui</td></tr>
+            <tr><td>Model access</td><td>Claude Code CLI</td></tr>
+            <tr><td>Computer</td><td>Windows laptop, RTX 3050 4 GB</td></tr>
+            </tbody>
+        </table>
+
+        <a class="back" href="/">&larr; back</a>
+    </main>
+
+    <!-- ko:start -->
+    <main lang="ko" hidden>
+        <h1>셰이더 스튜디오</h1>
+        <p class="lede">사람과 Claude가 실행 중인 같은 셰이더를 함께 작업하는 GLSL 환경입니다.
+        하나의 렌더러가 라이브 창과 헤드리스 캡처를 함께 구동하므로, Claude가 읽는 이미지가 곧
+        사용자가 보는 이미지입니다.</p>
+
+        <figure><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_1200/v1794306579/Screenshot_2026-11-10_172548_y2kmbf.png" alt="Shader Studio, image 1 of 1" loading="lazy" decoding="async"></figure>
+
+        <h2>상태</h2>
+        <p>렌더러, 캡처 도구, 코드 패널, 채팅 패널, 채팅 브리지를 만들었습니다. 각 부분은 따로
+        테스트했습니다. 채팅 메시지 하나로 Claude가 실행 중인 셰이더를 수정하는 완전한 라이브
+        흐름은 아직 실행하지 않았습니다. 편집 충돌을 처리하는 잠금 기능은 아직 만들지
+        않았습니다.</p>
+
+        <h2>하나의 렌더러, 두 개의 출력</h2>
+<pre>
+ GLSL shader file
+   |
+   v
+ Shared renderer (OpenGL 3.3 core)
+   |                     |
+   v                     v
+ Live window         Headless capture
+ reloads on save     writes PNG frames
+                         |
+                         v
+                     Claude reads them
+</pre>
+        <ul>
+            <li><strong>같은 픽셀.</strong> 같은 해상도에서 캡처는 라이브 창과 일치합니다. 그래서
+            이미지를 말로 설명할 필요가 없습니다.</li>
+            <li><strong>셰이더 형식.</strong> 셰이더는 Shadertoy 방식의 main 함수 하나입니다.
+            셰이더 안의 주석 한 줄로 입력 이미지를 연결합니다.</li>
+            <li><strong>피드백.</strong> 셰이더는 float 버퍼에서 이전 프레임을 읽을 수 있습니다.
+            Game of Life 데모로 이를 테스트합니다.</li>
+            <li><strong>캡처.</strong> 원하는 시점의 프레임을 찍거나, 시뮬레이션을 단계별로
+            진행하며 컨택트 시트를 만들 수 있습니다.</li>
+        </ul>
+
+        <h2>스튜디오 모드</h2>
+<pre>
+ Code panel (left)      Chat panel (right)
+       |                       |
+       | save                  | message file
+       v                       v
+ Shader file  &lt;-- edit --  Chat bridge &gt; Claude CLI
+       |                       |
+       v                       | reply file
+ Live shader background  &lt;-----+
+</pre>
+        <ul>
+            <li><strong>오버레이.</strong> 반투명 패널이 전체 화면 셰이더 위에 놓입니다.
+            외곽선이 있는 글자는 밝은 이미지 위에서도 읽히고, 키 하나로 배경을 어둡게 할 수
+            있습니다.</li>
+            <li><strong>코드 패널.</strong> 패널은 셰이더 파일을 그대로 보여주고 바뀐 줄을
+            강조합니다. 편집 모드는 같은 핫 리로드 경로로 저장합니다.</li>
+            <li><strong>채팅 브리지.</strong> 추가만 가능한 파일 두 개가 메시지를 나르고, 각
+            파일에는 쓰는 쪽이 하나뿐입니다. 로컬 Claude CLI만 모델을 호출하므로, 애플리케이션은
+            API를 호출하지 않습니다.</li>
+            <li><strong>두 개의 프로그램.</strong> 인터페이스 라이브러리에 자체 GLFW가 들어 있어
+            라이브 창의 GLFW와 함께 링크할 수 없습니다. 그래서 스튜디오는 별도의 프로그램이고, 두
+            프로그램이 렌더러를 공유합니다.</li>
+        </ul>
+
+        <h2>테스트</h2>
+        <table>
+            <thead><tr><th>검사</th><th>결과</th></tr></thead>
+            <tbody>
+            <tr><td>프로젝트 빌드와 vet</td><td>통과, 2026-11-09</td></tr>
+            <tr><td>채팅 브리지: 테스트 10개, 레이스 검출기, 20회 반복</td><td>통과, 2026-10-08</td></tr>
+            <tr><td>오버레이, 코드 패널, 편집 모드, 눈으로 확인</td><td>통과, 2026-07-07</td></tr>
+            <tr><td>채팅 패널 입력</td><td>통과, 수동 답장으로, 2026-07-08</td></tr>
+            </tbody>
+        </table>
+
+        <h2>사용한 하드웨어와 소프트웨어</h2>
+        <table>
+            <thead><tr><th>항목</th><th>내용</th></tr></thead>
+            <tbody>
+            <tr><td>언어</td><td>Go (cgo), GLSL</td></tr>
+            <tr><td>그래픽</td><td>OpenGL 3.3 core, GLFW, Dear ImGui</td></tr>
+            <tr><td>모델 접근</td><td>Claude Code CLI</td></tr>
+            <tr><td>컴퓨터</td><td>Windows 노트북, RTX 3050 4 GB</td></tr>
+            </tbody>
+        </table>
+
+        <a class="back" href="/">&larr; 돌아가기</a>
+    </main>
+    <!-- ko:end -->
+
+    
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

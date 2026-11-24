@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Houdini and ComfyUI — Mayananda</title>
+    <meta name="description" content="A chain that renders a Houdini scene, changes the image with a diffusion model, puts the result back on the scene, and renders again." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+    <style>
+        .page tbody td:first-child { white-space: normal; }
+        .page ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+        .page .section-links { font-size: 0.85rem; margin: 0 0 2.5rem; }
+        .page .section-links a { margin-right: 1.1rem; display: inline-block; }
+        .page .section-links a[aria-current="page"] { color: #ffffff; text-decoration: none; }
+    </style>
+  <link rel="stylesheet" crossorigin href="/assets/style-iZ5Nrewb.css">
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/ai.html">AI</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Houdini and ComfyUI</h1>
+        <p class="lede">A chain that renders a Houdini scene, changes the image with a diffusion model, puts the result back on the scene, and renders again.</p>
+        <p class="section-links"><a href="/houdini.html">Overview</a>
+            <a href="/houdini-ai.html">AI inside Houdini</a>
+            <a href="/houdini-comfyui.html" aria-current="page">Houdini and ComfyUI</a>
+            <a href="/houdini-render.html">Rendering and cataloguing</a>
+            <a href="/houdini-print.html">Houdini to Bambu Studio</a></p>
+
+        <div class="tiles" aria-label="Houdini and ComfyUI images">
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212457/pen_roundtrip_z23cdy.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212457/pen_roundtrip_z23cdy.png" alt="Houdini and ComfyUI, image 1 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212460/houdini_chain_00001__hjkjuw.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212460/houdini_chain_00001__hjkjuw.png" alt="Houdini and ComfyUI, image 2 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212425/beauty_m6kflv.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212425/beauty_m6kflv.png" alt="Houdini and ComfyUI, image 3 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212406/dome_masked_final_00001__uwizoy.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212406/dome_masked_final_00001__uwizoy.png" alt="Houdini and ComfyUI, image 4 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1773166517/shaiHuludD1_c17tg0.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1773166517/shaiHuludD1_c17tg0.png" alt="Houdini and ComfyUI, image 5 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212255/comfy_denoise060_pffja6.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212255/comfy_denoise060_pffja6.png" alt="Houdini and ComfyUI, image 6 of 6" loading="lazy" decoding="async"></a>
+        </div>
+
+        <h2>The chain</h2>
+        <p>ComfyUI is an open-source tool. My work is the chain around it. One Python call runs
+        all of the steps, with no extra libraries inside Houdini.</p>
+<pre>
+ Houdini render
+   |
+   v
+ ComfyUI image-to-image
+   |
+   v
+ Project the image onto the scene from the camera
+   |
+   v
+ Render again from a new camera
+</pre>
+        <table>
+            <thead><tr><th>First full run, still-life test scene</th><th>Time</th></tr></thead>
+            <tbody>
+            <tr><td>Beauty render</td><td>94.0 s</td></tr>
+            <tr><td>ComfyUI</td><td>15.5 s</td></tr>
+            <tr><td>Projection and second render</td><td>62.0 s</td></tr>
+            <tr><td><strong>Total</strong></td><td><strong>171.6 s</strong></td></tr>
+            </tbody>
+        </table>
+
+        <h2>Dome test: detail back into USD</h2>
+        <p>This test used an existing Karma scene with a volume cloud inside a glass dome.</p>
+        <ol>
+            <li>USD layers make separate masks for the cloud and the glass.</li>
+            <li>ComfyUI changes each masked area in its own pass, cloud first and then glass.</li>
+            <li>The change in the cloud scales the VDB density.</li>
+            <li>The change in the glass becomes a camera-projected emission texture.</li>
+            <li>Karma renders the scene again.</li>
+        </ol>
+        <table>
+            <thead><tr><th>View</th><th>Peak cloud density</th><th>Mean pixel change</th></tr></thead>
+            <tbody>
+            <tr><td>Outside the dome, second try</td><td>2.88 to 4.48</td><td>0.0072</td></tr>
+            <tr><td>Inside the glass</td><td>2.88 to 12.89</td><td>0.029</td></tr>
+            </tbody>
+        </table>
+        <p>The inside view took 75 min for the first render and 79 min for the second, at 640 x
+        360 with 8 + 8 samples. The noisy glass passes into every later step. A longer render was
+        too slow, so I tested a ComfyUI clean-up. A denoise of 0.22 kept the panels and added no
+        new objects. <strong>This test is not finished.</strong></p>
+
+        <h2>Remote render node</h2>
+        <p>A scene built on the laptop goes to the desktop over an encrypted transfer, and a
+        checksum confirms the copy. The desktop then renders and runs ComfyUI, with no interface,
+        over SSH.</p>
+        <table>
+            <thead><tr><th>Job on the desktop</th><th>Result</th></tr></thead>
+            <tbody>
+            <tr><td>Copernicus scene, 240 frames at 1024 x 1024</td><td>42.1 s</td></tr>
+            <tr><td>Copernicus scene, 1 frame at 512 x 512</td><td>18.7 s</td></tr>
+            <tr><td>5 image-to-image variants, DreamShaper 8</td><td>4.0 to 11.3 s each</td></tr>
+            </tbody>
+        </table>
+
+        <h2>What I learned</h2>
+        <ul>
+            <li>Projection covers only the faces that the first camera sees, and it does not test
+            occlusion. The result can show a ghost of an object on the wall behind it.</li>
+            <li>Emission only adds light, so anything that ComfyUI made darker is lost.</li>
+            <li>The model can replace a scene. At a denoise of 0.55 or more it replaced the sky
+            with room walls in 3 of 5 variants.</li>
+            <li>A small round mask invites a planet. A cloud denoise of 0.4 or less, and a
+            negative prompt that names round objects, stopped this.</li>
+            <li>Transparent pixels load as black in ComfyUI, so the chain places the render on
+            flat grey first.</li>
+        </ul>
+
+        <a class="back" href="/houdini.html">&larr; back</a>
+    </main>
+
+    <!-- ko:start -->
+    <main lang="ko" hidden>
+        <h1>후디니와 ComfyUI</h1>
+        <p class="lede">후디니 씬을 렌더하고, 디퓨전 모델로 이미지를 바꾸고, 그 결과를 씬에 다시 입혀 한 번 더 렌더하는 체인.</p>
+        <p class="section-links"><a href="/houdini.html">개요</a>
+            <a href="/houdini-ai.html">후디니 속 AI</a>
+            <a href="/houdini-comfyui.html" aria-current="page">후디니와 ComfyUI</a>
+            <a href="/houdini-render.html">렌더링과 카탈로그</a>
+            <a href="/houdini-print.html">후디니에서 Bambu Studio로</a></p>
+
+        <div class="tiles" aria-label="Houdini and ComfyUI images">
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212457/pen_roundtrip_z23cdy.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212457/pen_roundtrip_z23cdy.png" alt="Houdini and ComfyUI, image 1 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212460/houdini_chain_00001__hjkjuw.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212460/houdini_chain_00001__hjkjuw.png" alt="Houdini and ComfyUI, image 2 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212425/beauty_m6kflv.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212425/beauty_m6kflv.png" alt="Houdini and ComfyUI, image 3 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212406/dome_masked_final_00001__uwizoy.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212406/dome_masked_final_00001__uwizoy.png" alt="Houdini and ComfyUI, image 4 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1773166517/shaiHuludD1_c17tg0.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1773166517/shaiHuludD1_c17tg0.png" alt="Houdini and ComfyUI, image 5 of 6" loading="lazy" decoding="async"></a>
+            <a href="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto/v1794212255/comfy_denoise060_pffja6.png" target="_blank" rel="noopener"><img src="https://res.cloudinary.com/dpzz06lzn/image/upload/f_auto,q_auto,w_640/v1794212255/comfy_denoise060_pffja6.png" alt="Houdini and ComfyUI, image 6 of 6" loading="lazy" decoding="async"></a>
+        </div>
+
+        <h2>체인</h2>
+        <p>ComfyUI는 오픈 소스 도구입니다. 제 작업은 그 주변의 체인입니다. Python 호출 한 번으로
+        모든 단계를 실행하며, 후디니 안에 추가 라이브러리가 필요 없습니다.</p>
+<pre>
+ Houdini render
+   |
+   v
+ ComfyUI image-to-image
+   |
+   v
+ Project the image onto the scene from the camera
+   |
+   v
+ Render again from a new camera
+</pre>
+        <table>
+            <thead><tr><th>첫 전체 실행, 정물 테스트 씬</th><th>시간</th></tr></thead>
+            <tbody>
+            <tr><td>뷰티 렌더</td><td>94.0 s</td></tr>
+            <tr><td>ComfyUI</td><td>15.5 s</td></tr>
+            <tr><td>프로젝션과 두 번째 렌더</td><td>62.0 s</td></tr>
+            <tr><td><strong>합계</strong></td><td><strong>171.6 s</strong></td></tr>
+            </tbody>
+        </table>
+
+        <h2>돔 테스트: 디테일을 다시 USD로</h2>
+        <p>유리 돔 안에 볼륨 구름이 있는 기존 Karma 씬으로 테스트했습니다.</p>
+        <ol>
+            <li>USD 레이어로 구름과 유리의 마스크를 따로 만듭니다.</li>
+            <li>ComfyUI가 마스크 영역마다 따로, 구름을 먼저 그다음 유리를 바꿉니다.</li>
+            <li>구름의 변화로 VDB 밀도를 조절합니다.</li>
+            <li>유리의 변화는 카메라 프로젝션 이미션 텍스처가 됩니다.</li>
+            <li>Karma가 씬을 다시 렌더합니다.</li>
+        </ol>
+        <table>
+            <thead><tr><th>뷰</th><th>구름 최대 밀도</th><th>평균 픽셀 변화</th></tr></thead>
+            <tbody>
+            <tr><td>돔 바깥, 두 번째 시도</td><td>2.88 → 4.48</td><td>0.0072</td></tr>
+            <tr><td>유리 안쪽</td><td>2.88 → 12.89</td><td>0.029</td></tr>
+            </tbody>
+        </table>
+        <p>안쪽 뷰는 640 x 360, 샘플 8 + 8로 첫 렌더에 75분, 두 번째 렌더에 79분이
+        걸렸습니다. 노이즈가 많은 유리가 이후 모든 단계로 넘어갑니다. 더 긴 렌더는 너무 느려서
+        ComfyUI로 정리하는 방법을 테스트했습니다. 디노이즈 0.22에서 패널이 유지되고 새로운
+        오브젝트가 생기지 않았습니다. <strong>이 테스트는 끝나지 않았습니다.</strong></p>
+
+        <h2>원격 렌더 노드</h2>
+        <p>노트북에서 만든 씬을 암호화 전송으로 데스크톱에 보내고, 체크섬으로 복사를
+        확인합니다. 그다음 데스크톱이 SSH를 통해 인터페이스 없이 렌더하고 ComfyUI를
+        실행합니다.</p>
+        <table>
+            <thead><tr><th>데스크톱 작업</th><th>결과</th></tr></thead>
+            <tbody>
+            <tr><td>Copernicus 씬, 1024 x 1024 240프레임</td><td>42.1 s</td></tr>
+            <tr><td>Copernicus 씬, 512 x 512 1프레임</td><td>18.7 s</td></tr>
+            <tr><td>이미지 투 이미지 변형 5개, DreamShaper 8</td><td>각 4.0~11.3 s</td></tr>
+            </tbody>
+        </table>
+
+        <h2>배운 점</h2>
+        <ul>
+            <li>프로젝션은 첫 카메라가 보는 면만 덮고, 가려짐을 확인하지 않습니다. 그래서 뒤쪽
+            벽에 오브젝트의 잔상이 나타날 수 있습니다.</li>
+            <li>이미션은 빛을 더하기만 하므로, ComfyUI가 어둡게 만든 부분은 사라집니다.</li>
+            <li>모델이 씬 자체를 바꿔버릴 수 있습니다. 디노이즈 0.55 이상에서는 변형 5개 중 3개가
+            하늘을 방 벽으로 바꿨습니다.</li>
+            <li>작고 둥근 마스크는 행성을 불러옵니다. 구름 디노이즈를 0.4 이하로 하고, 네거티브
+            프롬프트에 둥근 물체를 적어 이를 막았습니다.</li>
+            <li>투명한 픽셀은 ComfyUI에서 검은색으로 읽히므로, 체인이 먼저 렌더를 평평한 회색
+            위에 놓습니다.</li>
+        </ul>
+
+        <a class="back" href="/houdini.html">&larr; 돌아가기</a>
+    </main>
+    <!-- ko:end -->
+
+    
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

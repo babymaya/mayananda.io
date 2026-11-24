@@ -7,9 +7,11 @@
     <title>AI — Mayananda</title>
     <meta name="description" content="Backend structure for work that runs unattended: queues, workers, and machines that hand jobs to each other." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
-  <link rel="stylesheet" crossorigin href="/assets/style-q1kQezv0.css">
+  <script type="module" crossorigin src="/assets/preload-helper-DD1OZmLC.js"></script>
+  <script type="module" crossorigin src="/assets/site-CO722sUk.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/style-iZ5Nrewb.css">
 </head>
-<body class="page">
+<body class="page terminal" data-bg="life">
 
     <nav id="nav">
         <button id="navToggle" type="button" aria-expanded="false"
@@ -27,7 +29,7 @@
         </ul>
     </nav>
 
-    <main>
+    <main data-term="visitor@mayananda: ~/ai">
         <h1>AI</h1>
         <p class="lede">Backend structure for work that runs unattended — queues, workers, and
         machines that hand jobs to each other.</p>
@@ -112,6 +114,39 @@
  model call  none in the app -- it shells out to a local CLI
 </pre>
 
+        <h2>a live show whose source is text</h2>
+        <p>A stage system for a four-dancer piece, where the floor is the display. Each dancer
+        gets a lane of light that travels their path; the four dance the same phrase staggered,
+        so the light has to perform that stagger too. It runs inside a node-based real-time
+        environment, but almost none of it is wired by hand &mdash; the node graph is rebuilt by
+        scripts, so the source of truth is code on disk. That is what makes it reviewable,
+        diffable, and drivable by a model at all.</p>
+        <p>The choreography arrives as a handwritten notebook. It becomes about 130 small grid
+        images, one per dancer per phrase, where a cell's colour is its meaning: start, path,
+        end, accent. A scanner turns each grid into a distance field &mdash; how far every cell
+        sits along the route &mdash; and bakes the whole bank into a header the shader compiles
+        in. So the pathfinding happens once, at build time, and the frame itself is a lookup.</p>
+<pre>
+ notebook --scan--> grids --distance field--> baked header --> shader
+
+ render      stateless: no feedback buffer, one array lookup per fragment
+ stagger     stored as a phase value per pattern, so the canon is data
+ sequencer   four lanes on absolute time; blocks snap, carve and save as JSON
+ continuity  a pattern is only offered if its start matches the last one's end
+ output      corner-pin warp onto the real floor
+</pre>
+        <div class="shots" data-set="ai/stage" aria-label="Screenshots"></div><p class="shots-hint">Scroll the strip above for more shots.</p>
+        <p>Being stateless is the whole trick: with no feedback buffer there is nothing to
+        accumulate, nothing to reset, and no drift over a long show &mdash; any moment can be
+        rendered directly, which is also what lets the transport scrub. The same instinct as the
+        shader work shows up in how it was built: a bridge lets a model drive the running session
+        and read back a screenshot, so a change to the interface could be checked by looking at
+        it rather than by asking whether it worked.</p>
+        <p>What it is not: a finished show. Two of twenty-four rows exist as arrangements &mdash;
+        the tool is built, the evening is not sequenced &mdash; and it has never been performed.
+        The transcription of the notebook carries its own confidence notes, because several
+        passages are genuinely ambiguous on the page.</p>
+
         <h2>controlling one machine from another</h2>
         <p>A pair of programs that let a laptop drive a desktop as if sitting at it: one side
         captures the screen, encodes it and sends it; the other displays it and sends keyboard,
@@ -136,6 +171,7 @@
                 <tr><td>PowerShell</td><td>The orchestration layer: queue workers, job submission, status and recovery, scheduling.</td></tr>
                 <tr><td>C / cgo</td><td>Bridging Go to the platform capture, video-encoding and OpenGL libraries.</td></tr>
                 <tr><td>GLSL / OpenGL</td><td>The shader environment: one renderer driving both a live window and headless frame capture.</td></tr>
+                <tr><td>Real-time show control</td><td>Sequencing on absolute time, precomputing spatial fields so the frame is only a lookup, and aligning projected output onto a physical surface.</td></tr>
                 <tr><td>Video encoding</td><td>Real-time H.264 compression of captured frames, plus measuring the codec path rather than assuming it.</td></tr>
                 <tr><td>Network security</td><td>Modern TLS, certificate pinning, constant-time token comparison, address allow-listing, rate limiting, single-session enforcement.</td></tr>
                 <tr><td>Local model runtimes</td><td>Running quantised models on consumer hardware and serving them behind one endpoint.</td></tr>

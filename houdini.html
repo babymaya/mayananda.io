@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
+    <title>Houdini — Mayananda</title>
+    <meta name="description" content="Tools that connect Houdini to AI models, render jobs, and 3D printing." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Cg fill='none' stroke='%23c10f0f' stroke-width='2'%3E%3Ccircle cx='16' cy='16' r='13'/%3E%3Ccircle cx='16' cy='16' r='8.5'/%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3C/g%3E%3C/svg%3E" />
+    <style>
+        .page tbody td:first-child { white-space: normal; }
+        .page ol { margin: 0 0 1rem; padding-left: 1.4rem; }
+        .page .section-links { font-size: 0.85rem; margin: 0 0 2.5rem; }
+        .page .section-links a { margin-right: 1.1rem; display: inline-block; }
+        .page .section-links a[aria-current="page"] { color: #ffffff; text-decoration: none; }
+    </style>
+  <link rel="stylesheet" crossorigin href="/assets/style-iZ5Nrewb.css">
+</head>
+<body class="page">
+
+    <nav id="nav">
+        <button id="navToggle" type="button" aria-expanded="false"
+                aria-controls="navMenu" aria-label="Open menu">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="caret" aria-hidden="true">^</span>
+        </button>
+        <ul id="navMenu">
+            <li><a href="/">Home</a></li>
+            <li><a href="/3d.html">3D Work</a></li>
+            <li><a href="/games.html">Games</a></li>
+            <li><a href="/ai.html">AI</a></li>
+            <li><a href="/pipeline.html">Pipeline</a></li>
+            <li><a href="/about.html">About</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <h1>Houdini</h1>
+        <p class="lede">Tools that connect Houdini to AI models, render jobs, and 3D printing.</p>
+        <p class="section-links"><a href="/houdini.html" aria-current="page">Overview</a>
+            <a href="/houdini-ai.html">AI inside Houdini</a>
+            <a href="/houdini-comfyui.html">Houdini and ComfyUI</a>
+            <a href="/houdini-render.html">Rendering and cataloguing</a>
+            <a href="/houdini-print.html">Houdini to Bambu Studio</a></p>
+
+        <h2>Status</h2>
+        <p>I built these tools in 2026 around Houdini 22. Each tool has its own page. This page
+        gives the state of each one. The limits are part of the record.</p>
+
+        <table>
+            <thead><tr><th>Tool</th><th>State</th></tr></thead>
+            <tbody>
+            <tr><td><a href="/houdini-ai.html">Live session bridge</a></td><td>Verified in the Houdini interface and headless</td></tr>
+            <tr><td><a href="/houdini-ai.html">Chat panel</a></td><td>Full loop verified on Houdini 22</td></tr>
+            <tr><td><a href="/houdini-comfyui.html">Houdini and ComfyUI chain</a></td><td>Verified end to end; the dome test is not finished</td></tr>
+            <tr><td><a href="/houdini-comfyui.html">Remote render node</a></td><td>Verified end to end on a second machine</td></tr>
+            <tr><td><a href="/houdini-render.html">Render job queue</a></td><td>Verified on one machine; never run across two</td></tr>
+            <tr><td><a href="/houdini-render.html">Scene cataloguer</a></td><td>Site catalogue done; end-node capture paused at scene 102 of 439</td></tr>
+            <tr><td><a href="/houdini-print.html">Houdini to Bambu Studio</a></td><td>Coming soon</td></tr>
+            </tbody>
+        </table>
+
+        <h2>Installation and health checks</h2>
+        <p>A Houdini upgrade changes the Houdini version, the Python version, and the preference
+        folder together. Each change can stop a tool with no error message. Three commands
+        solve this. One checks that Houdini's Qt libraries load. One installs every package for
+        every Houdini version on the machine. One reports PASS or FAIL for the whole toolset.</p>
+
+        <h2>Tests</h2>
+        <table>
+            <thead><tr><th>Suite</th><th>Result, Houdini 22.0.429, 2026-09-26</th></tr></thead>
+            <tbody>
+            <tr><td>Start-up code that Houdini runs</td><td>3 passed</td></tr>
+            <tr><td>Bridge starts and listens</td><td>Passed</td></tr>
+            <tr><td>Chat watcher</td><td>6 passed</td></tr>
+            <tr><td>Chat panel, headless, in Houdini's own Qt</td><td>36 passed</td></tr>
+            <tr><td>Render queue rules</td><td>20 passed</td></tr>
+            <tr><td>Render a real frame through the queue</td><td>Passed</td></tr>
+            </tbody>
+        </table>
+
+        <h2>Hardware and software used</h2>
+        <table>
+            <thead><tr><th>Item</th><th>Value</th></tr></thead>
+            <tbody>
+            <tr><td>Software</td><td>Houdini 22 Indie, Karma, Mantra, Copernicus, USD, Python, ComfyUI, Claude Code</td></tr>
+            <tr><td>Main computer</td><td>Laptop, RTX 3050 4 GB, 16 GB RAM</td></tr>
+            <tr><td>Render computer</td><td>Desktop, RTX 2080 8 GB, 32 GB RAM</td></tr>
+            <tr><td>Models</td><td>Stable Diffusion 1.5, DreamShaper 8</td></tr>
+            <tr><td>Printer</td><td>Bambu Lab A1 mini</td></tr>
+            </tbody>
+        </table>
+
+        <a class="back" href="/3d.html">&larr; back</a>
+    </main>
+
+    <!-- ko:start -->
+    <main lang="ko" hidden>
+        <h1>후디니</h1>
+        <p class="lede">후디니를 AI 모델, 렌더 작업, 3D 프린팅과 연결하는 도구들.</p>
+        <p class="section-links"><a href="/houdini.html" aria-current="page">개요</a>
+            <a href="/houdini-ai.html">후디니 속 AI</a>
+            <a href="/houdini-comfyui.html">후디니와 ComfyUI</a>
+            <a href="/houdini-render.html">렌더링과 카탈로그</a>
+            <a href="/houdini-print.html">후디니에서 Bambu Studio로</a></p>
+
+        <h2>상태</h2>
+        <p>2026년에 후디니 22를 중심으로 이 도구들을 만들었습니다. 도구마다 페이지가 따로
+        있습니다. 이 페이지는 각 도구의 상태를 정리합니다. 한계도 기록의 일부입니다.</p>
+
+        <table>
+            <thead><tr><th>도구</th><th>상태</th></tr></thead>
+            <tbody>
+            <tr><td><a href="/houdini-ai.html">라이브 세션 브리지</a></td><td>후디니 인터페이스와 헤드리스에서 검증</td></tr>
+            <tr><td><a href="/houdini-ai.html">채팅 패널</a></td><td>후디니 22에서 전체 흐름 검증</td></tr>
+            <tr><td><a href="/houdini-comfyui.html">후디니와 ComfyUI 체인</a></td><td>처음부터 끝까지 검증; 돔 테스트는 미완료</td></tr>
+            <tr><td><a href="/houdini-comfyui.html">원격 렌더 노드</a></td><td>두 번째 컴퓨터에서 처음부터 끝까지 검증</td></tr>
+            <tr><td><a href="/houdini-render.html">렌더 작업 큐</a></td><td>컴퓨터 한 대에서 검증; 두 대에서는 실행한 적 없음</td></tr>
+            <tr><td><a href="/houdini-render.html">씬 카탈로거</a></td><td>사이트 카탈로그 완료; 엔드 노드 캡처는 439개 씬 중 102번째에서 일시 정지</td></tr>
+            <tr><td><a href="/houdini-print.html">후디니에서 Bambu Studio로</a></td><td>곧 공개</td></tr>
+            </tbody>
+        </table>
+
+        <h2>설치와 상태 점검</h2>
+        <p>후디니를 업그레이드하면 후디니 버전, Python 버전, 환경설정 폴더가 함께 바뀝니다. 각
+        변화는 오류 메시지 없이 도구를 멈출 수 있습니다. 명령 세 개로 이를 해결합니다. 하나는
+        후디니의 Qt 라이브러리가 로드되는지 확인합니다. 하나는 컴퓨터의 모든 후디니 버전에 모든
+        패키지를 설치합니다. 하나는 도구 전체에 대해 PASS 또는 FAIL을 보고합니다.</p>
+
+        <h2>테스트</h2>
+        <table>
+            <thead><tr><th>항목</th><th>결과, 후디니 22.0.429, 2026-09-26</th></tr></thead>
+            <tbody>
+            <tr><td>후디니가 실행하는 시작 코드</td><td>3 통과</td></tr>
+            <tr><td>브리지 시작과 수신 대기</td><td>통과</td></tr>
+            <tr><td>채팅 감시기</td><td>6 통과</td></tr>
+            <tr><td>채팅 패널, 헤드리스, 후디니 자체 Qt에서</td><td>36 통과</td></tr>
+            <tr><td>렌더 큐 규칙</td><td>20 통과</td></tr>
+            <tr><td>큐를 통해 실제 프레임 렌더</td><td>통과</td></tr>
+            </tbody>
+        </table>
+
+        <h2>사용한 하드웨어와 소프트웨어</h2>
+        <table>
+            <thead><tr><th>항목</th><th>내용</th></tr></thead>
+            <tbody>
+            <tr><td>소프트웨어</td><td>Houdini 22 Indie, Karma, Mantra, Copernicus, USD, Python, ComfyUI, Claude Code</td></tr>
+            <tr><td>메인 컴퓨터</td><td>노트북, RTX 3050 4 GB, 16 GB RAM</td></tr>
+            <tr><td>렌더 컴퓨터</td><td>데스크톱, RTX 2080 8 GB, 32 GB RAM</td></tr>
+            <tr><td>모델</td><td>Stable Diffusion 1.5, DreamShaper 8</td></tr>
+            <tr><td>프린터</td><td>Bambu Lab A1 mini</td></tr>
+            </tbody>
+        </table>
+
+        <a class="back" href="/3d.html">&larr; 돌아가기</a>
+    </main>
+    <!-- ko:end -->
+
+    
+
+    <footer>
+        <p>email: <a href="mailto:mayalilananda@gmail.com">mayalilananda@gmail.com</a></p>
+        <p>ig: <a href="https://instagram.com/sri_mayananda" target="_blank" rel="noopener">@sri_mayananda</a></p>
+    </footer>
+
+    <script>
+        (function () {
+            var nav = document.getElementById('nav');
+            var btn = document.getElementById('navToggle');
+            btn.addEventListener('click', function () {
+                var open = nav.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && nav.classList.contains('open')) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                    btn.setAttribute('aria-label', 'Open menu');
+                    btn.focus();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

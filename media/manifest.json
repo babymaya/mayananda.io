@@ -1,4 +1,34 @@
 {
+ "ai/stage": {
+  "title": "Stage system",
+  "items": [
+   {
+    "src": "/media/ai/stage/01_notation_card.png",
+    "type": "image",
+    "caption": "One dancer, one phrase: red start, yellow path, green end"
+   },
+   {
+    "src": "/media/ai/stage/02_pattern_editor.webp",
+    "type": "image",
+    "caption": "The authoring grid: cells carry meaning, not just colour"
+   },
+   {
+    "src": "/media/ai/stage/03_sequencer_cockpit.webp",
+    "type": "image",
+    "caption": "Four lanes on absolute time, playhead running, live output left"
+   },
+   {
+    "src": "/media/ai/stage/04_valid_next_patterns.webp",
+    "type": "image",
+    "caption": "Only the patterns that can follow the last one are offered"
+   },
+   {
+    "src": "/media/ai/stage/05_projector_alignment.webp",
+    "type": "image",
+    "caption": "Corner-pin alignment onto the floor"
+   }
+  ]
+ },
  "games/cardsbones": {
   "title": "cardsbones",
   "items": [
